@@ -86,6 +86,19 @@ export async function resolveDouyin(url: string): Promise<VideoInfo> {
       }
     })
 
+    // 阻止跳转到 App 协议（snssdk1128:// 等）
+    win.webContents.on('will-redirect', (_e, url) => {
+      if (url.startsWith('snssdk') || url.startsWith('aweme://') || url.includes('//openapp') || url.includes('//ulink')) {
+        _e.preventDefault()
+      }
+    })
+    win.webContents.on('will-navigate', (_e, url) => {
+      if (url.startsWith('snssdk') || url.startsWith('aweme://') || url.includes('//openapp') || url.includes('//ulink')) {
+        _e.preventDefault()
+      }
+    })
+    win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+
     const timeout = setTimeout(() => {
       try { win.destroy() } catch { /* */ }
       reject(new Error('页面加载超时'))
