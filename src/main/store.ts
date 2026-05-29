@@ -11,7 +11,8 @@ const defaults: StoreSchema = {
     downloadPath: '',
     maxConcurrency: 3,
     language: 'zh-CN',
-    theme: 'system'
+    theme: 'system',
+    cookieBrowser: ''
   },
   history: []
 }

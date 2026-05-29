@@ -123,6 +123,27 @@ export function Settings() {
         <Card>
           <CardContent className="flex items-center justify-between py-3">
             <div className="flex flex-col gap-0.5">
+              <span className="text-[13px] font-medium">{t.settings.cookieBrowser}</span>
+              <span className="text-[12px] text-neutral-400">{t.settings.cookieBrowserDesc}</span>
+            </div>
+            <select
+              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
+              value={settings.cookieBrowser || ''}
+              onChange={(e) => settings.update({ cookieBrowser: e.target.value })}
+            >
+              <option value="">{t.settings.cookieBrowserOff}</option>
+              <option value="chrome">Chrome</option>
+              <option value="safari">Safari</option>
+              <option value="firefox">Firefox</option>
+              <option value="edge">Edge</option>
+              <option value="brave">Brave</option>
+            </select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <div className="flex flex-col gap-0.5">
               <span className="text-[13px] font-medium">{t.settings.ytdlpStatus}</span>
               <span className="text-[12px] text-neutral-400">
                 {ytDlpStatus.installed

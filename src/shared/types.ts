@@ -57,6 +57,7 @@ export interface AppSettings {
   maxConcurrency: number
   language: 'zh-CN' | 'en-US'
   theme: 'system' | 'light' | 'dark'
+  cookieBrowser: string
 }
 
 export interface IpcApi {

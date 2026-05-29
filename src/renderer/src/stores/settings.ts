@@ -5,7 +5,8 @@ const defaults: AppSettings = {
   downloadPath: '',
   maxConcurrency: 3,
   language: 'zh-CN',
-  theme: 'system'
+  theme: 'system',
+  cookieBrowser: ''
 }
 
 interface SettingsState extends AppSettings {
