@@ -13,7 +13,8 @@ function httpsGet(url: string, referer?: string): Promise<{ body: string; status
       headers: {
         'User-Agent': UA,
         'Referer': referer || 'https://www.douyin.com/',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9'
       },
       timeout: 15000
     }, (res: IncomingMessage) => {
@@ -48,31 +49,68 @@ async function resolveShortUrl(shortUrl: string): Promise<string> {
 }
 
 function extractVideoId(url: string): string | null {
-  // /video/1234567890123456789
   const vidMatch = url.match(/(?:video|note)\/(\d{10,})/)
   if (vidMatch) return vidMatch[1]
-  // ?modal_id=1234567890123456789
   const modalMatch = url.match(/modal_id=(\d{10,})/)
   if (modalMatch) return modalMatch[1]
   return null
 }
 
-async function fetchViaDouyinApi(videoId: string): Promise<VideoInfo> {
-  // Try douyin.com API with mobile UA header
-  const { body } = await httpsGet(
-    `https://www.douyin.com/aweme/v1/web/aweme/detail/?aweme_id=${videoId}&aid=6383`,
-    'https://www.douyin.com/'
-  )
-
-  const data = JSON.parse(body)
-
-  if (data.status_code !== 0 || !data.aweme_detail) {
-    throw new Error(data.status_msg || '抖音API返回错误')
+function parsePageData(html: string): any {
+  // 方法1: RENDER_DATA script tag (服务端渲染的数据)
+  const renderMatch = html.match(/<script[^>]*id="RENDER_DATA"[^>]*>([^<]+)<\/script>/)
+  if (renderMatch) {
+    try {
+      const decoded = decodeURIComponent(renderMatch[1])
+      const data = JSON.parse(decoded)
+      const key = Object.keys(data).find(k => k.includes('video') || k.includes('aweme') || k.includes('detail'))
+      if (key && data[key]) return data[key]
+    } catch { /* try next */ }
   }
 
-  const detail = data.aweme_detail
-  const videoData = detail?.video
-  const author = detail?.author
+  // 方法2: window._ROUTER_DATA
+  const routerMatch = html.match(/window\._ROUTER_DATA\s*=\s*(\{.+?\});<\/script>/)
+  if (routerMatch) {
+    try {
+      const data = JSON.parse(routerMatch[1])
+      const pageData = data?.loaderData?.['video_(id)/page']
+      if (pageData) return pageData
+    } catch { /* try next */ }
+  }
+
+  // 方法3: videoInfo 变量
+  const viMatch = html.match(/"videoInfo":\s*(\{[^}]+\})/)
+  if (viMatch) {
+    try {
+      return JSON.parse(viMatch[1])
+    } catch { /* try next */ }
+  }
+
+  return null
+}
+
+export async function resolveDouyin(url: string): Promise<VideoInfo> {
+  // 短链接先展开
+  let fullUrl = url
+  if (url.includes('v.douyin.com') && !url.includes('/video/')) {
+    fullUrl = await resolveShortUrl(url)
+  }
+
+  const videoId = extractVideoId(fullUrl)
+  if (!videoId) {
+    throw new Error(`无法识别视频ID，链接: ${fullUrl}`)
+  }
+
+  // 抓页面HTML，从内嵌数据中提取视频信息
+  const { body: html } = await httpsGet(fullUrl)
+
+  const pageData = parsePageData(html)
+  if (!pageData) {
+    throw new Error('无法解析抖音页面数据，可能需要登录。请尝试在Firefox登录douyin.com后重试')
+  }
+
+  const videoData = pageData?.video
+  const author = pageData?.author
 
   let videoUrl = ''
   if (videoData?.play_addr?.url_list?.length > 0) {
@@ -98,7 +136,7 @@ async function fetchViaDouyinApi(videoId: string): Promise<VideoInfo> {
 
   return {
     id: videoId,
-    title: detail?.desc || `抖音视频_${videoId}`,
+    title: pageData?.desc || `抖音视频_${videoId}`,
     thumbnail: videoData?.cover?.url_list?.[0] || videoData?.origin_cover?.url_list?.[0] || '',
     duration: Math.round((videoData?.duration || 0) / 1000),
     uploader: author?.nickname || '',
@@ -106,19 +144,4 @@ async function fetchViaDouyinApi(videoId: string): Promise<VideoInfo> {
     formats,
     videoUrl
   }
-}
-
-export async function resolveDouyin(url: string): Promise<VideoInfo> {
-  // 短链接先展开
-  let fullUrl = url
-  if (url.includes('v.douyin.com') && !url.includes('/video/')) {
-    fullUrl = await resolveShortUrl(url)
-  }
-
-  const videoId = extractVideoId(fullUrl)
-  if (!videoId) {
-    throw new Error(`无法识别视频ID，链接: ${fullUrl}`)
-  }
-
-  return fetchViaDouyinApi(videoId)
 }
