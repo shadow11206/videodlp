@@ -1,0 +1,145 @@
+import { useState, useEffect } from 'react'
+import { Folder, RefreshCw, Check, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { useI18n } from '@/stores/i18n'
+import { useSettings } from '@/stores/settings'
+
+export function Settings() {
+  const { t, locale, setLocale } = useI18n()
+  const settings = useSettings()
+  const [ytDlpStatus, setYtDlpStatus] = useState({ installed: false, version: '' })
+  const [updating, setUpdating] = useState(false)
+
+  useEffect(() => {
+    settings.load()
+    checkYtDlp()
+  }, [])
+
+  useEffect(() => {
+    if (settings.loaded && settings.language) {
+      setLocale(settings.language)
+    }
+  }, [settings.loaded, settings.language])
+
+  const checkYtDlp = async () => {
+    try {
+      const status = await window.api.checkYtDlp()
+      setYtDlpStatus(status)
+    } catch { /* ignore */ }
+  }
+
+  const handleUpdateYtDlp = async () => {
+    setUpdating(true)
+    try {
+      await window.api.updateYtDlp()
+      await checkYtDlp()
+    } catch { /* ignore */ }
+    setUpdating(false)
+  }
+
+  const handleSelectPath = async () => {
+    const path = await window.api.selectDirectory()
+    if (path) settings.setDownloadPath(path)
+  }
+
+  const handleLanguageChange = async (lang: string) => {
+    setLocale(lang)
+    await settings.update({ language: lang as 'zh-CN' | 'en-US' })
+  }
+
+  const handleThemeChange = async (theme: string) => {
+    await settings.update({ theme: theme as 'system' | 'light' | 'dark' })
+    applyTheme(theme)
+  }
+
+  const applyTheme = (theme: string) => {
+    const root = document.documentElement
+    if (theme === 'dark') root.classList.add('dark')
+    else if (theme === 'light') root.classList.remove('dark')
+    else root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches)
+  }
+
+  return (
+    <div className="flex flex-col h-full gap-4 max-w-[560px]">
+      <h1 className="text-[17px] font-semibold">{t.settings.title}</h1>
+      <div className="flex flex-col gap-3">
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[13px] font-medium">{t.settings.downloadPath}</span>
+              <span className="text-[12px] text-neutral-400 truncate max-w-[300px]">
+                {settings.downloadPath || t.settings.notSet}
+              </span>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleSelectPath}>
+              <Folder className="w-4 h-4 mr-1.5" />{t.settings.selectPath}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <span className="text-[13px] font-medium">{t.settings.maxConcurrency}</span>
+            <select
+              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
+              value={settings.maxConcurrency}
+              onChange={(e) => settings.update({ maxConcurrency: parseInt(e.target.value) })}
+            >
+              {[1, 2, 3, 5, 8, 10].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <span className="text-[13px] font-medium">{t.settings.language}</span>
+            <select
+              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
+              value={locale}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
+              <option value="zh-CN">中文</option>
+              <option value="en-US">English</option>
+            </select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <span className="text-[13px] font-medium">{t.settings.theme}</span>
+            <select
+              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
+              value={settings.theme || 'system'}
+              onChange={(e) => handleThemeChange(e.target.value)}
+            >
+              <option value="system">{t.settings.themeSystem}</option>
+              <option value="light">{t.settings.themeLight}</option>
+              <option value="dark">{t.settings.themeDark}</option>
+            </select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[13px] font-medium">{t.settings.ytdlpStatus}</span>
+              <span className="text-[12px] text-neutral-400">
+                {ytDlpStatus.installed
+                  ? `${t.settings.ytdlpInstalled} (v${ytDlpStatus.version})`
+                  : t.settings.ytdlpNotInstalled}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {ytDlpStatus.installed && <Check className="w-4 h-4 text-[#34C759]" />}
+              <Button variant="outline" size="sm" onClick={handleUpdateYtDlp} disabled={updating || !ytDlpStatus.installed}>
+                {updating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+                {updating ? t.settings.updating : t.settings.checkUpdate}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

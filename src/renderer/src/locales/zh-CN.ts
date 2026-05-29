@@ -1,0 +1,63 @@
+const zhCN = {
+  app: { title: 'VideoDLP' },
+  nav: { downloader: '下载', library: '库', settings: '设置' },
+  downloader: {
+    inputPlaceholder: '粘贴视频链接，每行一个...',
+    fetchInfo: '获取信息',
+    batchCount: '已添加 {count} 个链接',
+    title: '标题',
+    uploader: '作者',
+    duration: '时长',
+    quality: '清晰度',
+    download: '下载',
+    downloading: '下载中',
+    queued: '排队中',
+    noTasks: '暂无下载任务，粘贴链接开始下载',
+    speed: '速度',
+    eta: '剩余时间',
+    cancel: '取消',
+    retry: '重试',
+    unknown: '未知',
+    fileSize: '大小',
+    fetching: '正在获取视频信息...',
+    fetchError: '获取视频信息失败'
+  },
+  library: {
+    completed: '已完成',
+    incomplete: '未完成',
+    noCompleted: '暂无已完成的下载',
+    noIncomplete: '暂无未完成的下载',
+    openFolder: '打开文件夹',
+    delete: '删除',
+    clearAll: '清空全部',
+    downloadedAt: '下载时间',
+    copyLink: '复制链接'
+  },
+  settings: {
+    title: '设置',
+    downloadPath: '下载路径',
+    selectPath: '选择文件夹',
+    maxConcurrency: '最大同时下载数',
+    language: '语言',
+    theme: '主题',
+    themeSystem: '跟随系统',
+    themeLight: '浅色',
+    themeDark: '深色',
+    ytdlpStatus: 'yt-dlp 状态',
+    ytdlpInstalled: '已安装',
+    ytdlpNotInstalled: '未安装',
+    checkUpdate: '检查更新',
+    updating: '更新中...',
+    version: '版本',
+    notSet: '未设置'
+  },
+  bottomBar: {
+    ready: '就绪',
+    downloading: '下载中',
+    queued: '排队',
+    notInstalled: 'yt-dlp 未安装'
+  }
+}
+
+export default zhCN
+export type Locale = typeof zhCN
