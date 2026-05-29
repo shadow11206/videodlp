@@ -1,88 +1,92 @@
-import { BrowserWindow } from 'electron'
+import { net } from 'electron'
 import type { VideoInfo } from '@shared/types'
 
-export async function resolveDouyin(url: string): Promise<VideoInfo> {
-  const vidMatch = url.match(/video\/(\d+)/)
-  const modalMatch = url.match(/modal_id=(\d+)/)
-  const videoId = vidMatch?.[1] || modalMatch?.[1]
+const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
 
-  const shareUrl = videoId
-    ? `https://m.douyin.com/share/video/${videoId}`
-    : url
-
+async function httpGetJson(url: string, referer: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    const win = new BrowserWindow({
-      width: 400, height: 800,
-      show: false,
-      webPreferences: { nodeIntegration: false, contextIsolation: true }
-    })
+    const req = net.request({ url, redirect: 'follow' })
+    req.setHeader('User-Agent', UA)
+    req.setHeader('Referer', referer)
+    req.setHeader('Accept', 'application/json, text/plain, */*')
 
-    const timeout = setTimeout(() => {
-      win.destroy()
-      reject(new Error('抖音页面加载超时'))
-    }, 30000)
-
-    let resolved = false
-
-    const finish = (info: VideoInfo) => {
-      if (resolved) return
-      resolved = true
-      clearTimeout(timeout)
-      try { win.destroy() } catch { /* ignore */ }
-      resolve(info)
-    }
-
-    win.webContents.on('did-finish-load', async () => {
-      // page may need JS execution time, retry a few times
-      for (let attempt = 0; attempt < 10; attempt++) {
-        await new Promise(r => setTimeout(r, 1000))
+    req.on('response', (res) => {
+      let body = ''
+      res.on('data', (chunk: Buffer) => { body += chunk.toString() })
+      res.on('end', () => {
         try {
-          const result = await win.webContents.executeJavaScript(`
-            (function() {
-              try {
-                var el = document.getElementById('RENDER_DATA');
-                if (!el) return '';
-                var data = JSON.parse(el.textContent || '{}');
-                var v = data['app/video'] || data['app/video_(id)/page'] || data['app/aweme'] || data['app/detail'];
-                if (v) {
-                  var videoUrl = '';
-                  if (v.video && v.video.play_addr && v.video.play_addr.url_list) videoUrl = v.video.play_addr.url_list[0];
-                  if (!videoUrl && v.video && v.video.download_addr && v.video.download_addr.url_list) videoUrl = v.video.download_addr.url_list[0];
-                  return JSON.stringify({
-                    title: v.desc || '',
-                    thumbnail: v.video && v.video.cover && v.video.cover.url_list ? v.video.cover.url_list[0] : '',
-                    duration: v.duration || 0,
-                    uploader: v.author ? v.author.nickname : '',
-                    videoUrl: videoUrl
-                  });
-                }
-              } catch(e) {}
-              return '';
-            })()
-          `)
-          if (result) {
-            const data = JSON.parse(result)
-            finish({
-              id: videoId || Date.now().toString(),
-              title: data.title || '抖音视频',
-              thumbnail: data.thumbnail || '',
-              duration: Math.round((data.duration || 0) / 1000),
-              uploader: data.uploader || '',
-              webpageUrl: url,
-              formats: [{ id: 'best', ext: 'mp4', resolution: '720p', fps: 30, fileSize: '未知', note: '直接下载' }],
-              videoUrl: data.videoUrl || undefined
-            })
-            return
-          }
-        } catch { /* retry */ }
-      }
-      finish({ id: videoId || '', title: '抖音视频(需登录)', thumbnail: '', duration: 0, uploader: '', webpageUrl: url, formats: [] })
+          resolve(JSON.parse(body))
+        } catch {
+          reject(new Error(`响应解析失败: ${body.slice(0, 200)}`))
+        }
+      })
     })
-
-    win.webContents.on('did-fail-load', (_e, _code, desc) => {
-      reject(new Error(`页面加载失败: ${desc}`))
-    })
-
-    win.loadURL(shareUrl, { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' })
+    req.on('error', reject)
+    req.end()
   })
+}
+
+function extractVideoId(url: string): string | null {
+  const vidMatch = url.match(/video\/(\d{10,})/)
+  if (vidMatch) return vidMatch[1]
+  const modalMatch = url.match(/modal_id=(\d{10,})/)
+  if (modalMatch) return modalMatch[1]
+  return null
+}
+
+export async function resolveDouyin(url: string): Promise<VideoInfo> {
+  const videoId = extractVideoId(url)
+  if (!videoId) {
+    throw new Error('无法从链接中提取视频ID，请确认链接格式正确')
+  }
+
+  // 直接调抖音移动端 API，不需要浏览器和 Cookie
+  const data = await httpGetJson(
+    `https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=${videoId}`,
+    'https://www.douyin.com/'
+  )
+
+  const items = data?.item_list || []
+  if (items.length === 0) {
+    throw new Error('抖音返回空数据，请确认链接正确或稍后重试')
+  }
+
+  const video = items[0]
+  const videoData = video?.video
+  const author = video?.author
+
+  let videoUrl = ''
+  if (videoData?.play_addr?.url_list?.length > 0) {
+    videoUrl = videoData.play_addr.url_list[0]
+    videoUrl = videoUrl.replace('/playwm/', '/play/').replace('watermark=1', 'watermark=0')
+  }
+
+  const bitRates: any[] = videoData?.bit_rate || []
+  const formats = bitRates.map((br, idx) => ({
+    id: `bitrate_${idx}`,
+    ext: 'mp4',
+    resolution: br.gear_name || (idx === 0 ? '自适应' : '标清'),
+    fps: 30,
+    fileSize: (br.play_addr?.data_size || 0) > 0
+      ? `${((br.play_addr?.data_size || 0) / 1024 / 1024).toFixed(1)} MB`
+      : '未知',
+    note: ''
+  }))
+
+  if (formats.length === 0) {
+    formats.push({
+      id: 'default', ext: 'mp4', resolution: '720p', fps: 30, fileSize: '未知', note: ''
+    })
+  }
+
+  return {
+    id: videoId,
+    title: video?.desc || `抖音视频_${videoId}`,
+    thumbnail: videoData?.cover?.url_list?.[0] || videoData?.origin_cover?.url_list?.[0] || '',
+    duration: Math.round((videoData?.duration || 0) / 1000),
+    uploader: author?.nickname || '',
+    webpageUrl: `https://www.douyin.com/video/${videoId}`,
+    formats,
+    videoUrl
+  }
 }
