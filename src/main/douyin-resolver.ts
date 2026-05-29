@@ -10,11 +10,15 @@ async function loadFirefoxCookies(): Promise<{ name: string; value: string; doma
     homedir(),
     'Library/Application Support/Firefox/Profiles'
   )
-  const { readdirSync } = await import('fs')
+  const { readdirSync, existsSync } = await import('fs')
   const profiles = readdirSync(dbPath).filter(f => f.endsWith('.default-release') || f.endsWith('.default'))
-  if (profiles.length === 0) return []
-
-  const cookiesDb = join(dbPath, profiles[0], 'cookies.sqlite')
+  // 找到第一个有 cookies.sqlite 的 profile
+  let cookiesDb = ''
+  for (const p of profiles) {
+    const db = join(dbPath, p, 'cookies.sqlite')
+    if (existsSync(db)) { cookiesDb = db; break }
+  }
+  if (!cookiesDb) return []
 
   // 用 Python 读 sqlite（Electron 环境里 sqlite3 不可靠）
   try {
