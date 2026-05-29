@@ -4,15 +4,12 @@ import { join } from 'path'
 import { homedir } from 'os'
 import { execFileSync } from 'child_process'
 
-// 从 Firefox 数据库读取 douyin cookie
+const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+
 async function loadFirefoxCookies(): Promise<{ name: string; value: string; domain: string }[]> {
-  const dbPath = join(
-    homedir(),
-    'Library/Application Support/Firefox/Profiles'
-  )
+  const dbPath = join(homedir(), 'Library/Application Support/Firefox/Profiles')
   const { readdirSync, existsSync } = await import('fs')
   const profiles = readdirSync(dbPath).filter(f => f.endsWith('.default-release') || f.endsWith('.default'))
-  // 找到第一个有 cookies.sqlite 的 profile
   let cookiesDb = ''
   for (const p of profiles) {
     const db = join(dbPath, p, 'cookies.sqlite')
@@ -20,7 +17,6 @@ async function loadFirefoxCookies(): Promise<{ name: string; value: string; doma
   }
   if (!cookiesDb) return []
 
-  // 用 Python 读 sqlite（Electron 环境里 sqlite3 不可靠）
   try {
     const result = execFileSync('python3', ['-c', `
 import sqlite3, shutil, tempfile, os, json
@@ -41,8 +37,6 @@ print(json.dumps([{'domain': r[0], 'name': r[1], 'value': r[2]} for r in rows]))
   }
 }
 
-const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
-
 function extractVideoId(url: string): string | null {
   const vidMatch = url.match(/(?:video|note)\/(\d{10,})/)
   if (vidMatch) return vidMatch[1]
@@ -53,11 +47,8 @@ function extractVideoId(url: string): string | null {
 
 export async function resolveDouyin(url: string): Promise<VideoInfo> {
   const videoId = extractVideoId(url)
-  if (!videoId) {
-    throw new Error('无法从链接中提取视频ID')
-  }
+  if (!videoId) throw new Error('无法提取视频ID')
 
-  // 创建临时 session 并注入 Firefox cookie
   const ses = session.fromPartition(`douyin_${Date.now()}`, { cache: false })
 
   const cookies = await loadFirefoxCookies()
@@ -65,47 +56,32 @@ export async function resolveDouyin(url: string): Promise<VideoInfo> {
     try {
       await ses.cookies.set({
         url: `https://${c.domain}`,
-        name: c.name,
-        value: c.value,
-        domain: c.domain,
-        path: '/',
-        secure: true,
-        httpOnly: false
+        name: c.name, value: c.value, domain: c.domain,
+        path: '/', secure: true, httpOnly: false
       } as any)
-    } catch { /* skip invalid cookies */ }
+    } catch { /* skip */ }
   }
 
   return new Promise((resolve, reject) => {
     const win = new BrowserWindow({
-      width: 400, height: 800,
-      show: false,
-      webPreferences: {
-        session: ses,
-        nodeIntegration: false,
-        contextIsolation: true
-      }
+      width: 400, height: 800, show: false,
+      webPreferences: { session: ses, nodeIntegration: false, contextIsolation: true }
     })
 
-    // 阻止跳转到 App 协议（snssdk1128:// 等）
-    win.webContents.on('will-redirect', (_e, url) => {
-      if (url.startsWith('snssdk') || url.startsWith('aweme://') || url.includes('//openapp') || url.includes('//ulink')) {
-        _e.preventDefault()
-      }
+    win.webContents.on('will-redirect', (_e, redirectUrl) => {
+      if (/^(snssdk|aweme):\/\//.test(redirectUrl) || /openapp|ulink/i.test(redirectUrl)) _e.preventDefault()
     })
-    win.webContents.on('will-navigate', (_e, url) => {
-      if (url.startsWith('snssdk') || url.startsWith('aweme://') || url.includes('//openapp') || url.includes('//ulink')) {
-        _e.preventDefault()
-      }
+    win.webContents.on('will-navigate', (_e, navUrl) => {
+      if (/^(snssdk|aweme):\/\//.test(navUrl) || /openapp|ulink/i.test(navUrl)) _e.preventDefault()
     })
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
     const timeout = setTimeout(() => {
       try { win.destroy() } catch { /* */ }
-      reject(new Error('页面加载超时'))
-    }, 20000)
+      reject(new Error('解析超时'))
+    }, 25000)
 
     let finished = false
-
     const done = (info: VideoInfo) => {
       if (finished) return
       finished = true
@@ -115,58 +91,53 @@ export async function resolveDouyin(url: string): Promise<VideoInfo> {
     }
 
     win.webContents.on('did-finish-load', async () => {
-      // 重试读取 RENDER_DATA（页面可能需要一点时间执行 JS）
-      for (let i = 0; i < 8; i++) {
-        await new Promise(r => setTimeout(r, 1500))
+      // 从页面上下文内用 fetch 调用 API（浏览器会自动带 Cookie，不依赖 X-Bogus 签名）
+      for (let attempt = 0; attempt < 8; attempt++) {
         if (finished) return
+        await new Promise(r => setTimeout(r, 2000))
         try {
-          const raw = await win.webContents.executeJavaScript(`
-            (function() {
+          const result = await win.webContents.executeJavaScript(`
+            (async function() {
               try {
-                var el = document.getElementById('RENDER_DATA');
-                if (!el) return '';
-                return el.textContent || '';
+                var resp = await fetch('/aweme/v1/web/aweme/detail/?aweme_id=${videoId}&aid=6383', { credentials: 'include' });
+                var data = await resp.json();
+                var d = data.aweme_detail;
+                if (!d) return '';
+                var vd = d.video;
+                var vu = '';
+                if (vd && vd.play_addr && vd.play_addr.url_list) {
+                  vu = vd.play_addr.url_list[0].replace('/playwm/', '/play/');
+                }
+                return JSON.stringify({
+                  title: d.desc || '抖音视频',
+                  duration: vd ? vd.duration : 0,
+                  uploader: d.author ? d.author.nickname : '',
+                  thumbnail: (vd && vd.cover && vd.cover.url_list) ? vd.cover.url_list[0] : '',
+                  videoUrl: vu
+                });
               } catch(e) { return ''; }
             })()
           `)
-          if (raw && raw.length > 100) {
-            try {
-              const decoded = decodeURIComponent(raw)
-              const data = JSON.parse(decoded)
-              const key = Object.keys(data).find(k =>
-                k.includes('video') || k.includes('aweme') || k.includes('detail')
-              )
-              if (key && data[key]) {
-                const v = data[key]
-                const vd = v.video
-                let videoUrl = ''
-                if (vd?.play_addr?.url_list?.length > 0) {
-                  videoUrl = vd.play_addr.url_list[0]
-                  videoUrl = videoUrl.replace('/playwm/', '/play/').replace('watermark=1', 'watermark=0')
-                }
-                done({
-                  id: videoId,
-                  title: v.desc || `抖音视频_${videoId}`,
-                  thumbnail: vd?.cover?.url_list?.[0] || vd?.origin_cover?.url_list?.[0] || '',
-                  duration: Math.round((v.duration || 0) / 1000),
-                  uploader: v.author?.nickname || '',
-                  webpageUrl: url,
-                  formats: [{ id: 'best', ext: 'mp4', resolution: '720p', fps: 30, fileSize: '未知', note: '' }],
-                  videoUrl
-                })
-                return
-              }
-            } catch { /* next retry */ }
+          if (result && result.length > 10) {
+            const d = JSON.parse(result)
+            done({
+              id: videoId,
+              title: d.title,
+              thumbnail: d.thumbnail,
+              duration: Math.round((d.duration || 0) / 1000),
+              uploader: d.uploader,
+              webpageUrl: url,
+              formats: [{ id: 'best', ext: 'mp4', resolution: '720p', fps: 30, fileSize: '未知', note: '' }],
+              videoUrl: d.videoUrl || undefined
+            })
+            return
           }
         } catch { /* retry */ }
       }
       done({ id: videoId, title: '抖音视频(解析失败)', thumbnail: '', duration: 0, uploader: '', webpageUrl: url, formats: [] })
     })
 
-    win.webContents.on('did-fail-load', (_e, _code, desc) => {
-      reject(new Error(`页面加载失败: ${desc}`))
-    })
-
-    win.loadURL(`https://m.douyin.com/share/video/${videoId}`, { userAgent: UA })
+    win.webContents.on('did-fail-load', (_e, _code, desc) => reject(new Error(`页面加载失败: ${desc}`)))
+    win.loadURL(`https://www.douyin.com/video/${videoId}`, { userAgent: UA })
   })
 }
