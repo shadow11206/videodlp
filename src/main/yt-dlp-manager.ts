@@ -2,8 +2,6 @@ import { app } from 'electron'
 import { join } from 'path'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import { createWriteStream } from 'fs'
-import { get } from 'https'
 import { chmod, access, constants, rename, mkdir } from 'fs/promises'
 import type { VideoInfo, VideoFormat } from '@shared/types'
 
@@ -30,29 +28,18 @@ export async function getVersion(): Promise<string> {
 export async function downloadBinary(onProgress?: (pct: number) => void): Promise<void> {
   const dest = ytDlpPath()
   const tempDest = dest + '.tmp'
+  const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
 
   const dir = app.getPath('userData')
   await mkdir(dir, { recursive: true })
 
   await new Promise<void>((resolve, reject) => {
-    const file = createWriteStream(tempDest)
-    const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
-    get(url, (response) => {
-      if (response.statusCode === 302 && response.headers.location) {
-        get(response.headers.location, (rr) => {
-          const total = parseInt(rr.headers['content-length'] || '0', 10)
-          let downloaded = 0
-          rr.on('data', (chunk: Buffer) => {
-            downloaded += chunk.length
-            if (total > 0 && onProgress) onProgress(Math.round((downloaded / total) * 100))
-          })
-          rr.pipe(file)
-        }).on('error', reject)
-        return
-      }
-      response.pipe(file)
-    }).on('error', reject)
-    file.on('finish', resolve)
+    const proc = spawn('curl', ['-L', '-o', tempDest, url], { stdio: 'ignore' })
+    proc.on('close', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`curl exited with code ${code}`))
+    })
+    proc.on('error', reject)
   })
 
   await chmod(tempDest, 0o755)
