@@ -15,7 +15,7 @@ interface SettingsState extends AppSettings {
   setDownloadPath: (path: string) => Promise<void>
 }
 
-export const useSettings = create<SettingsState>((set, get) => ({
+export const useSettings = create<SettingsState>((set) => ({
   ...defaults,
   loaded: false,
 

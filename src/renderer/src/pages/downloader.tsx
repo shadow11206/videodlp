@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useI18n } from '@/stores/i18n'
 import { useDownload } from '@/stores/download'
 import { useHistory } from '@/stores/history'
-import { cn, formatDuration } from '@/lib/utils'
+import { formatDuration } from '@/lib/utils'
 import type { VideoInfo, DownloadTask } from '@shared/types'
 
 export function Downloader() {

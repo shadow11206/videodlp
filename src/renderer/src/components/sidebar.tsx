@@ -9,7 +9,7 @@ interface SidebarProps {
   onNavigate: (page: NavPage) => void
 }
 
-const items: { id: NavPage; icon: typeof Download; labelKey: keyof ReturnType<typeof useI18n>['t']['nav'] }[] = [
+const items: { id: NavPage; icon: typeof Download; labelKey: 'downloader' | 'library' | 'settings' }[] = [
   { id: 'downloader', icon: Download, labelKey: 'downloader' },
   { id: 'library', icon: Library, labelKey: 'library' },
   { id: 'settings', icon: Settings, labelKey: 'settings' }
