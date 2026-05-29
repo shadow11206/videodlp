@@ -1,0 +1,16 @@
+appId: com.videodlp.app
+productName: VideoDLP
+directories:
+  buildResources: resources
+  output: dist
+mac:
+  target: [dmg, zip]
+  artifactName: 'VideoDLP-${version}-mac.${ext}'
+  hardenedRuntime: true
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!docs/*'
+  - '!electron.vite.config.*'
+  - '!{.eslint*,prettier*}'
+  - '!{tsconfig*.json}'
