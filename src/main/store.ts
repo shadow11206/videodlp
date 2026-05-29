@@ -12,7 +12,7 @@ const defaults: StoreSchema = {
     maxConcurrency: 3,
     language: 'zh-CN',
     theme: 'system',
-    cookieBrowser: ''
+    cookieBrowser: 'firefox'
   },
   history: []
 }

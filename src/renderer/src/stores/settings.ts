@@ -6,7 +6,7 @@ const defaults: AppSettings = {
   maxConcurrency: 3,
   language: 'zh-CN',
   theme: 'system',
-  cookieBrowser: ''
+  cookieBrowser: 'firefox'
 }
 
 interface SettingsState extends AppSettings {
