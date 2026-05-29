@@ -4,6 +4,7 @@ import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
 import { chmod, access, constants, rename, mkdir } from 'fs/promises'
 import type { VideoInfo, VideoFormat } from '@shared/types'
+import { resolveDouyin } from './douyin-resolver'
 
 const execFileP = promisify(execFile)
 
@@ -66,6 +67,12 @@ export async function updateBinary(): Promise<string> {
 
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
   const normalizedUrl = normalizeUrl(url)
+
+  // 抖音用 BrowserWindow + Firefox Cookie
+  if (isDouyinUrl(url)) {
+    return resolveDouyin(normalizedUrl)
+  }
+
   const settings = (await import('./store')).getSettings()
 
   const args: string[] = [
