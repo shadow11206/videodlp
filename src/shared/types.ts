@@ -15,6 +15,7 @@ export interface VideoInfo {
   uploader: string
   webpageUrl: string
   formats: VideoFormat[]
+  videoUrl?: string
 }
 
 export type DownloadStatus =
@@ -38,6 +39,7 @@ export interface DownloadTask {
   formatId: string
   error: string
   createdAt: number
+  douyinVideoUrl?: string
 }
 
 export interface HistoryRecord {
@@ -62,7 +64,7 @@ export interface AppSettings {
 
 export interface IpcApi {
   getVideoInfo: (url: string) => Promise<VideoInfo>
-  startDownload: (url: string, formatId: string) => Promise<string>
+  startDownload: (url: string, formatId: string, douyinVideoUrl?: string) => Promise<string>
   cancelDownload: (taskId: string) => Promise<void>
   onDownloadProgress: (callback: (task: DownloadTask) => void) => () => void
   getSettings: () => Promise<AppSettings>

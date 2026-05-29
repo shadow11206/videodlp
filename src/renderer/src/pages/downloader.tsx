@@ -83,7 +83,8 @@ export function Downloader() {
   const handleDownload = useCallback(async (url: string) => {
     const fmtId = selectedFormat.get(url) || ''
     const info = results.get(url)
-    const taskId = await window.api.startDownload(url, fmtId)
+    const douyinVideoUrl = (info && 'videoUrl' in info) ? (info as any).videoUrl : undefined
+    const taskId = await window.api.startDownload(url, fmtId, douyinVideoUrl)
     addTask({
       id: taskId, url,
       title: info?.title || url,

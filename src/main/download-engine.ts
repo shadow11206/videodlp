@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from 'child_process'
 import type { BrowserWindow } from 'electron'
 import type { DownloadTask } from '@shared/types'
-import { ytDlpPath } from './yt-dlp-manager'
+import { ytDlpPath, normalizeUrl } from './yt-dlp-manager'
 import { getSettings as getStoreSettings } from './store'
 
 let uidCounter = 0
@@ -38,7 +38,7 @@ function scheduleNext(): void {
   }
 }
 
-export function createTask(url: string, formatId: string): string {
+export function createTask(url: string, formatId: string, douyinVideoUrl?: string): string {
   const id = `task_${Date.now()}_${++uidCounter}`
   const task: DownloadTask = {
     id,
@@ -51,7 +51,8 @@ export function createTask(url: string, formatId: string): string {
     filePath: '',
     formatId,
     error: '',
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    douyinVideoUrl
   }
   tasks.set(id, task)
   pushProgress(task)
@@ -78,12 +79,48 @@ function startDownload(task: DownloadTask): void {
   pushProgress(task)
 
   const settings = getStoreSettings()
+
+  // 抖音视频：直接用 curl 下载 CDN 地址
+  if (task.douyinVideoUrl) {
+    const safeTitle = (task.title || 'douyin_video').replace(/[/\\?%*:|"<>]/g, '_')
+    const ext = '.mp4'
+    const dir = settings.downloadPath || ''
+    const outputPath = dir ? `${dir}/${safeTitle}${ext}` : `${safeTitle}${ext}`
+    task.filePath = outputPath
+    pushProgress(task)
+
+    const proc = spawn('curl', ['-L', '-o', outputPath, task.douyinVideoUrl], { stdio: 'ignore' })
+    processes.set(task.id, proc)
+
+    proc.on('close', (code) => {
+      processes.delete(task.id)
+      if (code === 0) {
+        task.status = 'completed'
+        task.progress = 100
+      } else {
+        task.status = 'failed'
+        task.error = `curl 退出码: ${code}`
+      }
+      pushProgress(task)
+      scheduleNext()
+    })
+    proc.on('error', (err) => {
+      processes.delete(task.id)
+      task.status = 'failed'
+      task.error = err.message
+      pushProgress(task)
+      scheduleNext()
+    })
+    return
+  }
+
   const outputTemplate = settings.downloadPath
     ? `${settings.downloadPath}/%(title)s.%(ext)s`
     : `%(title)s.%(ext)s`
 
+  const downloadUrl = normalizeUrl(task.url)
   const args = [
-    task.url,
+    downloadUrl,
     '--newline',
     '--no-playlist',
     '--no-check-certificate',

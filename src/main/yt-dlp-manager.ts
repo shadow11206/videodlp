@@ -4,11 +4,25 @@ import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
 import { chmod, access, constants, rename, mkdir } from 'fs/promises'
 import type { VideoInfo, VideoFormat } from '@shared/types'
+import { resolveDouyin } from './douyin-resolver'
 
 const execFileP = promisify(execFile)
 
 function ytDlpPath(): string {
   return join(app.getPath('userData'), 'yt-dlp_macos')
+}
+
+function isDouyinUrl(url: string): boolean {
+  return /(douyin\.com|iesdouyin\.com|v\.douyin\.com)/.test(url)
+}
+
+function normalizeUrl(url: string): string {
+  const douyinModal = url.match(/douyin\.com\/.*[?&]modal_id=(\d+)/)
+  if (douyinModal) {
+    return `https://www.douyin.com/video/${douyinModal[1]}`
+  }
+  if (url.includes('v.douyin.com')) return url
+  return url
 }
 
 export async function isInstalled(): Promise<boolean> {
@@ -25,7 +39,7 @@ export async function getVersion(): Promise<string> {
   return stdout.trim()
 }
 
-export async function downloadBinary(onProgress?: (pct: number) => void): Promise<void> {
+export async function downloadBinary(_onProgress?: (pct: number) => void): Promise<void> {
   const dest = ytDlpPath()
   const tempDest = dest + '.tmp'
   const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
@@ -52,12 +66,22 @@ export async function updateBinary(): Promise<string> {
 }
 
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
+  const normalizedUrl = normalizeUrl(url)
+
+  if (isDouyinUrl(url)) {
+    try {
+      return await resolveDouyin(normalizedUrl)
+    } catch (err: any) {
+      throw new Error(`抖音解析失败: ${err.message}`)
+    }
+  }
+
   const { stdout } = await execFileP(ytDlpPath(), [
     '--dump-json',
     '--no-playlist',
     '--no-check-certificate',
     '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-    url
+    normalizedUrl
   ])
 
   const raw = JSON.parse(stdout)
@@ -102,4 +126,4 @@ function formatSize(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[Math.min(i, units.length - 1)]}`
 }
 
-export { ytDlpPath }
+export { ytDlpPath, normalizeUrl }

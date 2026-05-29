@@ -3,7 +3,7 @@ import type { IpcApi, DownloadTask } from '@shared/types'
 
 const api: IpcApi = {
   getVideoInfo: (url) => ipcRenderer.invoke('video:getInfo', url),
-  startDownload: (url, formatId) => ipcRenderer.invoke('download:start', url, formatId),
+  startDownload: (url, formatId, douyinVideoUrl) => ipcRenderer.invoke('download:start', url, formatId, douyinVideoUrl),
   cancelDownload: (taskId) => ipcRenderer.invoke('download:cancel', taskId),
   onDownloadProgress: (callback) => {
     const handler = (_e: Electron.IpcRendererEvent, task: DownloadTask) => callback(task)

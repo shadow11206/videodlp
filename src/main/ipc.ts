@@ -9,8 +9,8 @@ export function registerIpcHandlers(): void {
     return getVideoInfo(url)
   })
 
-  ipcMain.handle('download:start', async (_e, url: string, formatId: string) => {
-    return createTask(url, formatId)
+  ipcMain.handle('download:start', async (_e, url: string, formatId: string, douyinVideoUrl?: string) => {
+    return createTask(url, formatId, douyinVideoUrl)
   })
 
   ipcMain.handle('download:cancel', async (_e, taskId: string) => {
