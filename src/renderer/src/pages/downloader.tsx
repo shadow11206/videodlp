@@ -52,6 +52,7 @@ export function Downloader() {
     if (links.length === 0) return
     setFetching(true)
     setError('')
+
     for (const url of links) {
       try {
         const info = await window.api.getVideoInfo(url)
@@ -61,7 +62,9 @@ export function Downloader() {
           return next
         })
         if (info.formats.length > 0) {
-          const fmt = info.formats.find((f) => f.resolution === '1080p') || info.formats[0]
+          const bestFormat = info.formats[0]
+          const fmt = info.formats.find((f) => f.resolution === '1080p')
+            || bestFormat
           setSelectedFormat((prev) => {
             const next = new Map(prev)
             next.set(url, fmt.id)
@@ -83,13 +86,19 @@ export function Downloader() {
   const handleDownload = useCallback(async (url: string) => {
     const fmtId = selectedFormat.get(url) || ''
     const info = results.get(url)
-    const douyinVideoUrl = (info && 'videoUrl' in info) ? (info as any).videoUrl : undefined
-    const taskId = await window.api.startDownload(url, fmtId, douyinVideoUrl)
+    const taskId = await window.api.startDownload(url, fmtId)
     addTask({
-      id: taskId, url,
+      id: taskId,
+      url,
       title: info?.title || url,
-      status: 'pending', progress: 0, speed: '', eta: '', filePath: '',
-      formatId: fmtId, error: '', createdAt: Date.now()
+      status: 'pending',
+      progress: 0,
+      speed: '',
+      eta: '',
+      filePath: '',
+      formatId: fmtId,
+      error: '',
+      createdAt: Date.now()
     })
   }, [selectedFormat, results, addTask])
 
@@ -110,15 +119,21 @@ export function Downloader() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div className="flex flex-col gap-2">
-        <textarea
-          className="flex w-full rounded-card border border-neutral-200/60 bg-white/70 px-4 py-3 text-[13px] shadow-sm resize-none placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-800/60 dark:bg-neutral-900/70"
-          rows={3}
-          placeholder={t.downloader.inputPlaceholder}
-          value={linkText}
-          onChange={(e) => setLinkText(e.target.value)}
-        />
+        <div className="relative">
+          <textarea
+            className="flex w-full rounded-card border border-neutral-200/60 bg-white/70 px-4 py-3 text-[13px] shadow-sm resize-none placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-800/60 dark:bg-neutral-900/70"
+            rows={3}
+            placeholder={t.downloader.inputPlaceholder}
+            value={linkText}
+            onChange={(e) => setLinkText(e.target.value)}
+          />
+        </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={handleFetchInfo} disabled={fetching || links.length === 0}>
+          <Button
+            size="sm"
+            onClick={handleFetchInfo}
+            disabled={fetching || links.length === 0}
+          >
             <Link className="w-4 h-4 mr-1.5" />
             {fetching ? t.downloader.fetching : t.downloader.fetchInfo}
           </Button>
@@ -134,7 +149,9 @@ export function Downloader() {
             </span>
           )}
         </div>
-        {error && <p className="text-[13px] text-[#FF3B30]">{error}</p>}
+        {error && (
+          <p className="text-[13px] text-[#FF3B30]">{error}</p>
+        )}
       </div>
 
       <ScrollArea className="flex-1">
@@ -161,25 +178,39 @@ export function Downloader() {
                 <Card key={url}>
                   <CardContent className="flex flex-col gap-2 py-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[13px] font-medium truncate flex-1 mr-2">{taskForUrl.title}</span>
+                      <span className="text-[13px] font-medium truncate flex-1 mr-2">
+                        {taskForUrl.title}
+                      </span>
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={
                             taskForUrl.status === 'completed' ? 'default' :
                             taskForUrl.status === 'failed' ? 'destructive' :
-                            taskForUrl.status === 'cancelled' ? 'secondary' : 'default'
+                            taskForUrl.status === 'cancelled' ? 'secondary' :
+                            'default'
                           }
                         >
                           {taskForUrl.status === 'downloading' ? `${taskForUrl.progress.toFixed(0)}%` :
-                           taskForUrl.status === 'pending' ? t.downloader.queued : taskForUrl.status}
+                           taskForUrl.status === 'pending' ? t.downloader.queued :
+                           taskForUrl.status}
                         </Badge>
                         {taskForUrl.status === 'downloading' && (
-                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleCancel(taskForUrl.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs"
+                            onClick={() => handleCancel(taskForUrl.id)}
+                          >
                             <X className="w-3 h-3" />
                           </Button>
                         )}
                         {taskForUrl.status === 'failed' && (
-                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(url)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs"
+                            onClick={() => handleDownload(url)}
+                          >
                             {t.downloader.retry}
                           </Button>
                         )}
@@ -208,19 +239,39 @@ export function Downloader() {
                 <Card key={url}>
                   <CardContent className="flex gap-3 py-3">
                     {info.thumbnail && (
-                      <img src={info.thumbnail} alt="" className="w-[120px] h-[68px] rounded-mac object-cover flex-shrink-0 bg-neutral-100 dark:bg-neutral-800" />
+                      <img
+                        src={info.thumbnail}
+                        alt=""
+                        className="w-[120px] h-[68px] rounded-mac object-cover flex-shrink-0 bg-neutral-100 dark:bg-neutral-800"
+                      />
                     )}
                     <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                      <span className="text-[13px] font-medium leading-tight line-clamp-2">{info.title}</span>
+                      <span className="text-[13px] font-medium leading-tight line-clamp-2">
+                        {info.title}
+                      </span>
                       <div className="flex items-center gap-3 text-[11px] text-neutral-400">
-                        {info.uploader && <span className="flex items-center gap-1"><User className="w-3 h-3" /> {info.uploader}</span>}
-                        {info.duration > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDuration(info.duration)}</span>}
+                        {info.uploader && (
+                          <span className="flex items-center gap-1">
+                            <User className="w-3 h-3" /> {info.uploader}
+                          </span>
+                        )}
+                        {info.duration > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> {formatDuration(info.duration)}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <select
                           className="h-7 rounded-md border border-neutral-200 bg-white/80 px-2 text-[12px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
                           value={fmtId}
-                          onChange={(e) => setSelectedFormat((prev) => { const n = new Map(prev); n.set(url, e.target.value); return n })}
+                          onChange={(e) => {
+                            setSelectedFormat((prev) => {
+                              const next = new Map(prev)
+                              next.set(url, e.target.value)
+                              return next
+                            })
+                          }}
                         >
                           {info.formats.map((f) => (
                             <option key={f.id} value={f.id}>
@@ -229,8 +280,13 @@ export function Downloader() {
                           ))}
                         </select>
                         {fmtId && (
-                          <Button size="sm" className="h-7 text-xs" onClick={() => handleDownload(url)}>
-                            <ArrowDown className="w-3 h-3 mr-1" />{t.downloader.download}
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => handleDownload(url)}
+                          >
+                            <ArrowDown className="w-3 h-3 mr-1" />
+                            {t.downloader.download}
                           </Button>
                         )}
                       </div>
