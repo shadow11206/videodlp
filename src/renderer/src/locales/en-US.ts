@@ -51,10 +51,7 @@ const enUS: Locale = {
     checkUpdate: 'Check for Update',
     updating: 'Updating...',
     version: 'Version',
-    notSet: 'Not set',
-    cookieBrowser: 'Cookie Source (required for Douyin)',
-    cookieBrowserDesc: 'Read browser login session, required for Douyin and similar sites',
-    cookieBrowserOff: 'No Cookies'
+    notSet: 'Not set'
   },
   bottomBar: {
     ready: 'Ready',

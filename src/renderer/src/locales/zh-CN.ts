@@ -49,10 +49,7 @@ const zhCN = {
     checkUpdate: '检查更新',
     updating: '更新中...',
     version: '版本',
-    notSet: '未设置',
-    cookieBrowser: 'Cookie 来源（抖音必选）',
-    cookieBrowserDesc: '读取浏览器登录态，抖音等网站下载必需',
-    cookieBrowserOff: '不使用 Cookie'
+    notSet: '未设置'
   },
   bottomBar: {
     ready: '就绪',
