@@ -1,28 +1,16 @@
 import { app } from 'electron'
 import { join } from 'path'
-import { execFile, spawn } from 'child_process'
+import { execFile } from 'child_process'
 import { promisify } from 'util'
+import { createWriteStream } from 'fs'
+import { get } from 'https'
 import { chmod, access, constants, rename, mkdir } from 'fs/promises'
 import type { VideoInfo, VideoFormat } from '@shared/types'
-import { resolveDouyin } from './douyin-resolver'
 
 const execFileP = promisify(execFile)
 
 function ytDlpPath(): string {
   return join(app.getPath('userData'), 'yt-dlp_macos')
-}
-
-function isDouyinUrl(url: string): boolean {
-  return /(douyin\.com|iesdouyin\.com|v\.douyin\.com)/.test(url)
-}
-
-function normalizeUrl(url: string): string {
-  const douyinModal = url.match(/douyin\.com\/.*[?&]modal_id=(\d+)/)
-  if (douyinModal) {
-    return `https://www.douyin.com/video/${douyinModal[1]}`
-  }
-  if (url.includes('v.douyin.com')) return url
-  return url
 }
 
 export async function isInstalled(): Promise<boolean> {
@@ -39,21 +27,32 @@ export async function getVersion(): Promise<string> {
   return stdout.trim()
 }
 
-export async function downloadBinary(_onProgress?: (pct: number) => void): Promise<void> {
+export async function downloadBinary(onProgress?: (pct: number) => void): Promise<void> {
   const dest = ytDlpPath()
   const tempDest = dest + '.tmp'
-  const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
 
   const dir = app.getPath('userData')
   await mkdir(dir, { recursive: true })
 
   await new Promise<void>((resolve, reject) => {
-    const proc = spawn('curl', ['-L', '-o', tempDest, url], { stdio: 'ignore' })
-    proc.on('close', (code) => {
-      if (code === 0) resolve()
-      else reject(new Error(`curl exited with code ${code}`))
-    })
-    proc.on('error', reject)
+    const file = createWriteStream(tempDest)
+    const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
+    get(url, (response) => {
+      if (response.statusCode === 302 && response.headers.location) {
+        get(response.headers.location, (rr) => {
+          const total = parseInt(rr.headers['content-length'] || '0', 10)
+          let downloaded = 0
+          rr.on('data', (chunk: Buffer) => {
+            downloaded += chunk.length
+            if (total > 0 && onProgress) onProgress(Math.round((downloaded / total) * 100))
+          })
+          rr.pipe(file)
+        }).on('error', reject)
+        return
+      }
+      response.pipe(file)
+    }).on('error', reject)
+    file.on('finish', resolve)
   })
 
   await chmod(tempDest, 0o755)
@@ -66,78 +65,46 @@ export async function updateBinary(): Promise<string> {
 }
 
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
-  const normalizedUrl = normalizeUrl(url)
-
-  // 抖音用 BrowserWindow + Firefox Cookie
-  if (isDouyinUrl(url)) {
-    return resolveDouyin(normalizedUrl)
-  }
-
-  const settings = (await import('./store')).getSettings()
-
-  const args: string[] = [
+  const { stdout } = await execFileP(ytDlpPath(), [
     '--dump-json',
     '--no-playlist',
     '--no-check-certificate',
-    '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
-  ]
+    url
+  ])
 
-  // Firefox cookie 用于抖音等需要登录的平台
-  if (settings.cookieBrowser) {
-    args.push('--cookies-from-browser', settings.cookieBrowser)
+  const raw = JSON.parse(stdout)
+
+  const formats: VideoFormat[] = []
+  const seen = new Set<string>()
+  for (const f of raw.formats || []) {
+    if (f.vcodec === 'none') continue
+    const resolution = f.resolution || f.format_note || 'unknown'
+    if (seen.has(resolution)) continue
+    seen.add(resolution)
+    formats.push({
+      id: f.format_id,
+      ext: f.ext,
+      resolution,
+      fps: f.fps || 0,
+      fileSize: f.filesize ? formatSize(f.filesize) : '未知',
+      note: f.format_note || ''
+    })
   }
 
-  args.push(normalizedUrl)
+  formats.sort((a, b) => {
+    const na = parseInt(a.resolution) || 0
+    const nb = parseInt(b.resolution) || 0
+    return nb - na
+  })
 
-  try {
-    const { stdout } = await execFileP(ytDlpPath(), args)
-
-    const raw = JSON.parse(stdout)
-
-    const formats: VideoFormat[] = []
-    const seen = new Set<string>()
-    for (const f of raw.formats || []) {
-      if (f.vcodec === 'none') continue
-      const resolution = f.resolution || f.format_note || 'unknown'
-      if (seen.has(resolution)) continue
-      seen.add(resolution)
-      formats.push({
-        id: f.format_id,
-        ext: f.ext,
-        resolution,
-        fps: f.fps || 0,
-        fileSize: f.filesize ? formatSize(f.filesize) : '未知',
-        note: f.format_note || ''
-      })
-    }
-
-    formats.sort((a, b) => {
-      const na = parseInt(a.resolution) || 0
-      const nb = parseInt(b.resolution) || 0
-      return nb - na
-    })
-
-    return {
-      id: raw.id || raw.display_id,
-      title: raw.title,
-      thumbnail: raw.thumbnail || raw.thumbnails?.[0]?.url || '',
-      duration: raw.duration || 0,
-      uploader: raw.uploader || raw.channel || '',
-      webpageUrl: raw.webpage_url || url,
-      formats
-    }
-  } catch (err: any) {
-    // 如果 yt-dlp 失败且是抖音链接，给出明确提示
-    if (isDouyinUrl(url)) {
-      throw new Error(
-        '抖音解析失败。请确保：\n' +
-        '1. 已安装 Firefox 浏览器\n' +
-        '2. 在 Firefox 中登录 douyin.com\n' +
-        '3. 在设置中将 Cookie 来源设为 Firefox\n' +
-        `原始错误: ${err.stderr || err.message}`
-      )
-    }
-    throw err
+  return {
+    id: raw.id || raw.display_id,
+    title: raw.title,
+    thumbnail: raw.thumbnail || raw.thumbnails?.[0]?.url || '',
+    duration: raw.duration || 0,
+    uploader: raw.uploader || raw.channel || '',
+    webpageUrl: raw.webpage_url || url,
+    formats
   }
 }
 
@@ -147,4 +114,4 @@ function formatSize(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[Math.min(i, units.length - 1)]}`
 }
 
-export { ytDlpPath, normalizeUrl }
+export { ytDlpPath }
