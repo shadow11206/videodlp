@@ -55,7 +55,9 @@ const zhCN = {
     checkUpdate: '检查更新',
     updating: '更新中...',
     version: '版本',
-    notSet: '未设置'
+    notSet: '未设置',
+    author: '作者',
+    github: 'GitHub'
   },
   bottomBar: {
     ready: '就绪',

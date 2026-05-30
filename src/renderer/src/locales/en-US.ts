@@ -57,7 +57,9 @@ const enUS: Locale = {
     checkUpdate: 'Check for Update',
     updating: 'Updating...',
     version: 'Version',
-    notSet: 'Not set'
+    notSet: 'Not set',
+    author: 'Author',
+    github: 'GitHub'
   },
   bottomBar: {
     ready: 'Ready',

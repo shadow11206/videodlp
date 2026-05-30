@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, RefreshCw, Check, Loader2 } from 'lucide-react'
+import { Folder, RefreshCw, Check, Loader2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/stores/i18n'
@@ -162,6 +162,29 @@ export function Settings() {
                 {updating ? t.settings.updating : t.settings.checkUpdate}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Author */}
+        <Card>
+          <CardContent className="flex items-center gap-3 py-3">
+            <img
+              src="https://github.com/shadow11206.png"
+              alt=""
+              className="w-10 h-10 rounded-full flex-shrink-0"
+            />
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+              <span className="text-[13px] font-medium">shadow11206</span>
+              <span className="text-[12px] text-neutral-400">{t.settings.author}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open('https://github.com/shadow11206', '_blank')}
+            >
+              <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+              {t.settings.github}
+            </Button>
           </CardContent>
         </Card>
       </div>
