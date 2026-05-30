@@ -9,6 +9,7 @@ import { useDownload } from '@/stores/download'
 export function DownloadPanel() {
   const { t } = useI18n()
   const tasks = useDownload((s) => s.tasks)
+  const cancelAll = useDownload((s) => s.cancelAll)
   const [expanded, setExpanded] = useState(false)
 
   const activeTasks = tasks.filter(
@@ -53,7 +54,21 @@ export function DownloadPanel() {
 
       {expanded && (
         <div className="max-h-[200px] border-t border-neutral-200/40 dark:border-neutral-800/40">
-          <ScrollArea className="max-h-[200px]">
+          <div className="flex items-center justify-between px-3 py-1.5 border-b border-neutral-100 dark:border-neutral-800">
+            <span className="text-[11px] text-neutral-400">
+              {activeTasks.length} {t.downloader.downloading}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[11px] text-neutral-400 hover:text-[#FF3B30] px-1.5"
+              onClick={cancelAll}
+            >
+              <X className="w-3 h-3 mr-0.5" />
+              {t.downloader.cancelAll}
+            </Button>
+          </div>
+          <ScrollArea className="max-h-[160px]">
             <div className="flex flex-col gap-1 p-2">
               {activeTasks.map((task) => (
                 <div
@@ -77,16 +92,14 @@ export function DownloadPanel() {
                       )}
                     </div>
                   </div>
-                  {task.status === 'downloading' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 flex-shrink-0"
-                      onClick={() => handleCancel(task.id)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 flex-shrink-0"
+                    onClick={() => handleCancel(task.id)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
                 </div>
               ))}
             </div>

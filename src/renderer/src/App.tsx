@@ -4,6 +4,7 @@ import { Sidebar, type NavPage } from '@/components/sidebar'
 import { BottomBar } from '@/components/bottom-bar'
 import { DownloadPanel } from '@/components/download-panel'
 import { Downloader } from '@/pages/downloader'
+import { Downloading } from '@/pages/downloading'
 import { Library } from '@/pages/library'
 import { Settings } from '@/pages/settings'
 import { useDownload } from '@/stores/download'
@@ -49,6 +50,7 @@ export default function App() {
 
         <main className="ml-[220px] flex-1 p-6 overflow-hidden flex flex-col min-h-0">
           {page === 'downloader' && <Downloader />}
+          {page === 'downloading' && <Downloading />}
           {page === 'library' && <Library />}
           {page === 'settings' && <Settings />}
         </main>

@@ -1,6 +1,6 @@
 const zhCN = {
   app: { title: 'VideoDLP' },
-  nav: { downloader: '下载', library: '库', settings: '设置' },
+  nav: { downloader: '下载', downloading: '下载中', library: '库', settings: '设置' },
   downloader: {
     inputPlaceholder: '粘贴视频链接，每行一个...',
     fetchInfo: '获取信息',
@@ -20,7 +20,10 @@ const zhCN = {
     unknown: '未知',
     fileSize: '大小',
     fetching: '正在获取视频信息...',
-    fetchError: '获取视频信息失败'
+    fetchError: '获取视频信息失败',
+    cancelFetch: '取消获取',
+    cancelAll: '取消全部',
+    noDownloading: '暂无正在下载的任务'
   },
   library: {
     completed: '已完成',

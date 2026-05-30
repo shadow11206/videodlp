@@ -2,7 +2,7 @@ import type { Locale } from './zh-CN'
 
 const enUS: Locale = {
   app: { title: 'VideoDLP' },
-  nav: { downloader: 'Download', library: 'Library', settings: 'Settings' },
+  nav: { downloader: 'Download', downloading: 'Downloading', library: 'Library', settings: 'Settings' },
   downloader: {
     inputPlaceholder: 'Paste video links, one per line...',
     fetchInfo: 'Fetch Info',
@@ -22,7 +22,10 @@ const enUS: Locale = {
     unknown: 'Unknown',
     fileSize: 'Size',
     fetching: 'Fetching video info...',
-    fetchError: 'Failed to fetch video info'
+    fetchError: 'Failed to fetch video info',
+    cancelFetch: 'Cancel Fetch',
+    cancelAll: 'Cancel All',
+    noDownloading: 'No active downloads'
   },
   library: {
     completed: 'Completed',

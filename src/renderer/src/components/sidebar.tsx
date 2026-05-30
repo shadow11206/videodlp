@@ -1,10 +1,11 @@
 import type React from 'react'
-import { Download, Library, Settings } from 'lucide-react'
+import { Download, Library, Settings, ArrowDown } from 'lucide-react'
 import { useI18n } from '@/stores/i18n'
+import { useDownload } from '@/stores/download'
 import type { Locale } from '@/locales/zh-CN'
 import { cn } from '@/lib/utils'
 
-export type NavPage = 'downloader' | 'library' | 'settings'
+export type NavPage = 'downloader' | 'downloading' | 'library' | 'settings'
 
 interface SidebarProps {
   active: NavPage
@@ -13,12 +14,16 @@ interface SidebarProps {
 
 const items: { id: NavPage; icon: typeof Download; labelKey: keyof Locale['nav'] }[] = [
   { id: 'downloader', icon: Download, labelKey: 'downloader' },
+  { id: 'downloading', icon: ArrowDown, labelKey: 'downloading' },
   { id: 'library', icon: Library, labelKey: 'library' },
   { id: 'settings', icon: Settings, labelKey: 'settings' }
 ]
 
 export function Sidebar({ active, onNavigate }: SidebarProps) {
   const { t } = useI18n()
+  const activeCount = useDownload((s) =>
+    s.tasks.filter((t) => t.status === 'pending' || t.status === 'downloading').length
+  )
 
   return (
     <div
@@ -38,7 +43,12 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
             )}
           >
             <Icon className="w-[18px] h-[18px]" />
-            {t.nav[labelKey]}
+            <span className="flex-1">{t.nav[labelKey]}</span>
+            {id === 'downloading' && activeCount > 0 && (
+              <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-[#007AFF] text-white text-[11px] font-semibold leading-none">
+                {activeCount}
+              </span>
+            )}
           </button>
         ))}
       </div>

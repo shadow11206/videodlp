@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { Link, X, ArrowDown, Clock, User, FileVideo } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -30,12 +30,16 @@ export function Downloader() {
     .map((l) => l.trim())
     .filter(Boolean)
 
+  const cancelFetchRef = useRef(false)
+
   const handleFetchInfo = useCallback(async () => {
     if (links.length === 0) return
+    cancelFetchRef.current = false
     setFetching(true)
     setError('')
 
     for (const url of links) {
+      if (cancelFetchRef.current) break
       try {
         const info = await window.api.getVideoInfo(url)
         setResults((prev) => {
@@ -64,6 +68,11 @@ export function Downloader() {
     }
     setFetching(false)
   }, [links.join('\n')])
+
+  const handleCancelFetch = useCallback(() => {
+    cancelFetchRef.current = true
+    setFetching(false)
+  }, [setFetching])
 
   const handleDownload = useCallback(async (url: string) => {
     const fmtId = selectedFormat.get(url) || ''
@@ -113,11 +122,12 @@ export function Downloader() {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            onClick={handleFetchInfo}
-            disabled={fetching || links.length === 0}
+            onClick={fetching ? handleCancelFetch : handleFetchInfo}
+            disabled={!fetching && links.length === 0}
+            variant={fetching ? 'destructive' : 'default'}
           >
             <Link className="w-4 h-4 mr-1.5" />
-            {fetching ? t.downloader.fetching : t.downloader.fetchInfo}
+            {fetching ? t.downloader.cancelFetch : t.downloader.fetchInfo}
           </Button>
           {readyLinks.length > 0 && (
             <Button size="sm" onClick={handleBatchDownload}>
