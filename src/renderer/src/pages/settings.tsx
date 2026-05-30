@@ -66,7 +66,7 @@ export function Settings() {
   }
 
   return (
-    <div className="flex flex-col h-full gap-4 max-w-[560px] min-h-0 overflow-auto">
+    <div className="flex flex-col gap-4 max-w-[560px]">
       <h1 className="text-[17px] font-semibold">{t.settings.title}</h1>
 
       <div className="flex flex-col gap-3">

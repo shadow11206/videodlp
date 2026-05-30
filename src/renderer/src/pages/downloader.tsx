@@ -131,8 +131,8 @@ export function Downloader() {
   const readyLinks = links.filter((u) => results.has(u) && results.get(u) !== null)
 
   return (
-    <div className="flex flex-col flex-1 gap-4 min-h-0">
-      <div className="flex flex-col gap-2 flex-shrink-0">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <div className="relative">
           <textarea
             className="flex w-full rounded-card border border-neutral-200/60 bg-white/70 px-4 py-3 text-[13px] shadow-sm resize-none placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-800/60 dark:bg-neutral-900/70"
@@ -169,8 +169,7 @@ export function Downloader() {
         )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="flex flex-col gap-4 pb-4">
+      <div className="flex flex-col gap-4">
           {paginatedUrls.map((url) => {
             const info = results.get(url)
             const taskForUrl = tasks.find((t) => t.url === url)
@@ -380,7 +379,6 @@ export function Downloader() {
             </div>
           )}
         </div>
-      </div>
     </div>
   )
 }

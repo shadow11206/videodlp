@@ -48,7 +48,7 @@ export default function App() {
       <div className="flex flex-1 pt-[38px]">
         <Sidebar active={page} onNavigate={setPage} />
 
-        <main className="ml-[220px] flex-1 p-6 overflow-hidden flex flex-col min-h-0">
+        <main className="ml-[220px] flex-1 p-6 overflow-y-auto">
           {page === 'downloader' && <Downloader />}
           {page === 'downloading' && <Downloading />}
           {page === 'library' && <Library />}

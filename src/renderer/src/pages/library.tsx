@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { FolderOpen, Trash2, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useI18n } from '@/stores/i18n'
 import { useHistory } from '@/stores/history'
 import { useDownload } from '@/stores/download'
@@ -61,7 +60,7 @@ export function Library() {
   }, [])
 
   return (
-    <div className="flex flex-col h-full gap-4 min-h-0">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-1 border-b border-neutral-200/60 dark:border-neutral-800/60">
         <button
           className={cn(
@@ -120,9 +119,8 @@ export function Library() {
         )}
       </div>
 
-      <ScrollArea className="flex-1">
-        {tab === 'completed' && (
-          <div className="flex flex-col gap-2 pb-4">
+      {tab === 'completed' && (
+        <div className="flex flex-col gap-2">
             {completed.length === 0 ? (
               <div className="text-center py-16 text-[13px] text-neutral-300 dark:text-neutral-600">
                 {t.library.noCompleted}
@@ -202,7 +200,6 @@ export function Library() {
             )}
           </div>
         )}
-      </ScrollArea>
     </div>
   )
 }

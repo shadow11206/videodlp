@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useI18n } from '@/stores/i18n'
 import { useDownload } from '@/stores/download'
 
@@ -20,7 +19,7 @@ export function Downloading() {
   }
 
   return (
-    <div className="flex flex-col h-full gap-4 min-h-0">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-[17px] font-semibold">
           {t.nav.downloading}
@@ -43,8 +42,7 @@ export function Downloading() {
         )}
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-3 pb-4">
+      <div className="flex flex-col gap-3">
           {activeTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-neutral-300 dark:text-neutral-600">
               <ArrowDown className="w-12 h-12" />
@@ -101,8 +99,7 @@ export function Downloading() {
               </Card>
             ))
           )}
-        </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
