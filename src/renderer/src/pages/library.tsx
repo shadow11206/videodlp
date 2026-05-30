@@ -53,8 +53,14 @@ export function Library() {
         >
           {t.library.incomplete}
         </button>
+
         {tab === 'completed' && completed.length > 0 && (
-          <Button variant="ghost" size="sm" className="ml-auto text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={clearAll}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto text-xs text-neutral-400 hover:text-[#FF3B30]"
+            onClick={clearAll}
+          >
             <Trash2 className="w-3.5 h-3.5 mr-1" />
             {t.library.clearAll}
           </Button>
@@ -82,14 +88,29 @@ export function Library() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleCopyLink(record.url)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => handleCopyLink(record.url)}
+                      >
                         <Copy className="w-3 h-3" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleOpenFolder(record.filePath)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => handleOpenFolder(record.filePath)}
+                      >
                         <FolderOpen className="w-3.5 h-3.5 mr-1" />
                         {t.library.openFolder}
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={() => remove(record.id)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]"
+                        onClick={() => remove(record.id)}
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
