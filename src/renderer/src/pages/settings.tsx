@@ -8,6 +8,7 @@ import { useSettings } from '@/stores/settings'
 export function Settings() {
   const { t, locale, setLocale } = useI18n()
   const settings = useSettings()
+
   const [ytDlpStatus, setYtDlpStatus] = useState({ installed: false, version: '' })
   const [updating, setUpdating] = useState(false)
 
@@ -55,15 +56,21 @@ export function Settings() {
 
   const applyTheme = (theme: string) => {
     const root = document.documentElement
-    if (theme === 'dark') root.classList.add('dark')
-    else if (theme === 'light') root.classList.remove('dark')
-    else root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches)
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else if (theme === 'light') {
+      root.classList.remove('dark')
+    } else {
+      root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches)
+    }
   }
 
   return (
     <div className="flex flex-col h-full gap-4 max-w-[560px]">
       <h1 className="text-[17px] font-semibold">{t.settings.title}</h1>
+
       <div className="flex flex-col gap-3">
+        {/* Download Path */}
         <Card>
           <CardContent className="flex items-center justify-between py-3">
             <div className="flex flex-col gap-0.5">
@@ -73,11 +80,13 @@ export function Settings() {
               </span>
             </div>
             <Button variant="outline" size="sm" onClick={handleSelectPath}>
-              <Folder className="w-4 h-4 mr-1.5" />{t.settings.selectPath}
+              <Folder className="w-4 h-4 mr-1.5" />
+              {t.settings.selectPath}
             </Button>
           </CardContent>
         </Card>
 
+        {/* Max Concurrency */}
         <Card>
           <CardContent className="flex items-center justify-between py-3">
             <span className="text-[13px] font-medium">{t.settings.maxConcurrency}</span>
@@ -86,11 +95,14 @@ export function Settings() {
               value={settings.maxConcurrency}
               onChange={(e) => settings.update({ maxConcurrency: parseInt(e.target.value) })}
             >
-              {[1, 2, 3, 5, 8, 10].map((n) => <option key={n} value={n}>{n}</option>)}
+              {[1, 2, 3, 5, 8, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
             </select>
           </CardContent>
         </Card>
 
+        {/* Language */}
         <Card>
           <CardContent className="flex items-center justify-between py-3">
             <span className="text-[13px] font-medium">{t.settings.language}</span>
@@ -105,6 +117,7 @@ export function Settings() {
           </CardContent>
         </Card>
 
+        {/* Theme */}
         <Card>
           <CardContent className="flex items-center justify-between py-3">
             <span className="text-[13px] font-medium">{t.settings.theme}</span>
@@ -120,27 +133,7 @@ export function Settings() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="flex items-center justify-between py-3">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[13px] font-medium">{t.settings.cookieBrowser}</span>
-              <span className="text-[12px] text-neutral-400">{t.settings.cookieBrowserDesc}</span>
-            </div>
-            <select
-              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
-              value={settings.cookieBrowser || ''}
-              onChange={(e) => settings.update({ cookieBrowser: e.target.value })}
-            >
-              <option value="">{t.settings.cookieBrowserOff}</option>
-              <option value="chrome">Chrome</option>
-              <option value="safari">Safari</option>
-              <option value="firefox">Firefox</option>
-              <option value="edge">Edge</option>
-              <option value="brave">Brave</option>
-            </select>
-          </CardContent>
-        </Card>
-
+        {/* yt-dlp Status */}
         <Card>
           <CardContent className="flex items-center justify-between py-3">
             <div className="flex flex-col gap-0.5">
@@ -152,9 +145,20 @@ export function Settings() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {ytDlpStatus.installed && <Check className="w-4 h-4 text-[#34C759]" />}
-              <Button variant="outline" size="sm" onClick={handleUpdateYtDlp} disabled={updating || !ytDlpStatus.installed}>
-                {updating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+              {ytDlpStatus.installed && (
+                <Check className="w-4 h-4 text-[#34C759]" />
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUpdateYtDlp}
+                disabled={updating || !ytDlpStatus.installed}
+              >
+                {updating ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-1.5" />
+                )}
                 {updating ? t.settings.updating : t.settings.checkUpdate}
               </Button>
             </div>
