@@ -45,10 +45,10 @@ export default function App() {
     <div className="h-screen flex flex-col bg-[#f5f5f7] dark:bg-[#1c1c1e] text-neutral-900 dark:text-neutral-100">
       <Titlebar />
 
-      <div className="flex flex-1 pt-[38px]">
+      <div className="flex-1 relative">
         <Sidebar active={page} onNavigate={setPage} />
 
-        <main className="ml-[220px] flex-1 p-6 overflow-y-auto">
+        <main className="absolute top-[38px] left-[220px] right-0 bottom-[28px] overflow-y-auto p-6">
           {page === 'downloader' && <Downloader />}
           {page === 'downloading' && <Downloading />}
           {page === 'library' && <Library />}
