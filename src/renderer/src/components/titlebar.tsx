@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useI18n } from '@/stores/i18n'
 
 export function Titlebar() {
@@ -6,7 +7,7 @@ export function Titlebar() {
   return (
     <div
       className="fixed top-0 left-0 right-0 z-50"
-      style={{ height: '38px', WebkitAppRegion: 'drag' as any }}
+      style={{ height: '38px', WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       <div className="flex items-center justify-center h-full">
         <span className="text-[13px] font-semibold text-neutral-800 dark:text-neutral-200">

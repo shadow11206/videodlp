@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useI18n } from '@/stores/i18n'
 import { useDownload } from '@/stores/download'
 
@@ -14,7 +15,7 @@ export function BottomBar({ ytDlpReady }: BottomBarProps) {
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-40 h-[28px] flex items-center px-4"
-      style={{ WebkitAppRegion: 'no-drag' as any }}
+      style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
     >
       <div className="flex items-center gap-3 text-[11px] text-neutral-500 dark:text-neutral-500 w-full">
         <div className="flex items-center gap-1.5">

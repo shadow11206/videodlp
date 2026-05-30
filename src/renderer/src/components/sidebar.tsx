@@ -1,5 +1,7 @@
+import type React from 'react'
 import { Download, Library, Settings } from 'lucide-react'
 import { useI18n } from '@/stores/i18n'
+import type { Locale } from '@/locales/zh-CN'
 import { cn } from '@/lib/utils'
 
 export type NavPage = 'downloader' | 'library' | 'settings'
@@ -9,7 +11,7 @@ interface SidebarProps {
   onNavigate: (page: NavPage) => void
 }
 
-const items: { id: NavPage; icon: typeof Download; labelKey: 'downloader' | 'library' | 'settings' }[] = [
+const items: { id: NavPage; icon: typeof Download; labelKey: keyof Locale['nav'] }[] = [
   { id: 'downloader', icon: Download, labelKey: 'downloader' },
   { id: 'library', icon: Library, labelKey: 'library' },
   { id: 'settings', icon: Settings, labelKey: 'settings' }
@@ -21,7 +23,7 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
   return (
     <div
       className="fixed top-0 left-0 bottom-0 w-[220px] z-40 pt-[38px]"
-      style={{ WebkitAppRegion: 'no-drag' as any }}
+      style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
     >
       <div className="h-full backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border-r border-neutral-200/40 dark:border-neutral-800/40 px-3 py-4 flex flex-col gap-1">
         {items.map(({ id, icon: Icon, labelKey }) => (
