@@ -12,6 +12,7 @@ interface DownloaderState {
   setSelectedFormat: (updater: (prev: Map<string, string>) => Map<string, string>) => void
   setFetching: (v: boolean) => void
   setError: (e: string) => void
+  removeUrl: (url: string) => void
   clearResults: () => void
 }
 
@@ -33,6 +34,15 @@ export const useDownloader = create<DownloaderState>((set) => ({
   setFetching: (v) => set({ fetching: v }),
 
   setError: (e) => set({ error: e }),
+
+  removeUrl: (url) =>
+    set((s) => {
+      const nextResults = new Map(s.results)
+      const nextFormats = new Map(s.selectedFormat)
+      nextResults.delete(url)
+      nextFormats.delete(url)
+      return { results: nextResults, selectedFormat: nextFormats }
+    }),
 
   clearResults: () =>
     set({ results: new Map(), selectedFormat: new Map(), error: '', fetching: false })

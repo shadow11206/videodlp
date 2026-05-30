@@ -1,5 +1,5 @@
-import { useCallback, useRef } from 'react'
-import { Link, X, ArrowDown, Clock, User, FileVideo } from 'lucide-react'
+import { useCallback, useRef, useState, useEffect } from 'react'
+import { Link, X, ArrowDown, Clock, User, FileVideo, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +24,7 @@ export function Downloader() {
   const setSelectedFormat = useDownloader((s) => s.setSelectedFormat)
   const setFetching = useDownloader((s) => s.setFetching)
   const setError = useDownloader((s) => s.setError)
+  const removeUrl = useDownloader((s) => s.removeUrl)
 
   const links = linkText
     .split('\n')
@@ -31,6 +32,29 @@ export function Downloader() {
     .filter(Boolean)
 
   const cancelFetchRef = useRef(false)
+
+  const PAGE_SIZE = 10
+  const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [links.length])
+
+  const allUrls = links
+  const totalPages = Math.max(1, Math.ceil(allUrls.length / PAGE_SIZE))
+  const safePage = Math.min(currentPage, totalPages)
+  const paginatedUrls = allUrls.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  const goToPage = useCallback((p: number) => {
+    setCurrentPage(Math.max(1, Math.min(p, totalPages)))
+  }, [totalPages])
+
+  const handleRemoveUrl = useCallback((url: string) => {
+    removeUrl(url)
+    const lines = linkText.split('\n')
+    const newText = lines.filter((l) => l.trim() !== url).join('\n')
+    setLinkText(newText)
+  }, [linkText, removeUrl, setLinkText])
 
   const handleFetchInfo = useCallback(async () => {
     if (links.length === 0) return
@@ -148,11 +172,9 @@ export function Downloader() {
 
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-4 pb-4">
-          {links.map((url) => {
+          {paginatedUrls.map((url) => {
             const info = results.get(url)
             const taskForUrl = tasks.find((t) => t.url === url)
-
-            if (info === undefined && !taskForUrl) return null
 
             if (info === null) {
               return (
@@ -160,6 +182,14 @@ export function Downloader() {
                   <CardContent className="flex items-center gap-3 py-3">
                     <span className="text-[13px] text-[#FF3B30] flex-1 truncate">{url}</span>
                     <Badge variant="destructive">{t.downloader.fetchError}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 flex-shrink-0 text-neutral-400 hover:text-[#FF3B30]"
+                      onClick={() => handleRemoveUrl(url)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </CardContent>
                 </Card>
               )
@@ -238,9 +268,19 @@ export function Downloader() {
                       />
                     )}
                     <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                      <span className="text-[13px] font-medium leading-tight line-clamp-2">
-                        {info.title}
-                      </span>
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-[13px] font-medium leading-tight line-clamp-2 flex-1">
+                          {info.title}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 flex-shrink-0 text-neutral-300 hover:text-[#FF3B30]"
+                          onClick={() => handleRemoveUrl(url)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                       <div className="flex items-center gap-3 text-[11px] text-neutral-400">
                         {info.uploader && (
                           <span className="flex items-center gap-1">
@@ -297,10 +337,47 @@ export function Downloader() {
             )
           })}
 
-          {links.length === 0 && tasks.length === 0 && (
+          {allUrls.length === 0 && tasks.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-neutral-300 dark:text-neutral-600">
               <FileVideo className="w-12 h-12" />
               <span className="text-[13px]">{t.downloader.noTasks}</span>
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-1 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={safePage <= 1}
+                onClick={() => goToPage(safePage - 1)}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  variant={p === safePage ? 'default' : 'ghost'}
+                  size="sm"
+                  className="h-7 w-7 text-xs p-0"
+                  onClick={() => goToPage(p)}
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={safePage >= totalPages}
+                onClick={() => goToPage(safePage + 1)}
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+              <span className="text-[11px] text-neutral-400 ml-2">
+                {allUrls.length} 个 · {totalPages} 页
+              </span>
             </div>
           )}
         </div>
