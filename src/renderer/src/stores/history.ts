@@ -7,6 +7,7 @@ interface HistoryState {
   load: () => Promise<void>
   add: (record: HistoryRecord) => Promise<void>
   remove: (id: string) => Promise<void>
+  removeBatch: (ids: string[]) => Promise<void>
   clearAll: () => Promise<void>
 }
 
@@ -27,6 +28,11 @@ export const useHistory = create<HistoryState>((set, get) => ({
   remove: async (id) => {
     await window.api.removeHistory(id)
     set({ completed: get().completed.filter((r) => r.id !== id) })
+  },
+
+  removeBatch: async (ids) => {
+    await Promise.all(ids.map((id) => window.api.removeHistory(id)))
+    set({ completed: get().completed.filter((r) => !ids.includes(r.id)) })
   },
 
   clearAll: async () => {

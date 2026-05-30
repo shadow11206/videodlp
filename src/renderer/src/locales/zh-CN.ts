@@ -30,6 +30,9 @@ const zhCN = {
     openFolder: '打开文件夹',
     delete: '删除',
     clearAll: '清空全部',
+    deleteSelected: '删除选中 ({count})',
+    selectAll: '全选',
+    deselectAll: '取消全选',
     downloadedAt: '下载时间',
     copyLink: '复制链接'
   },

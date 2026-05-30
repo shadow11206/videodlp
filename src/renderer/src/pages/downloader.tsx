@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useCallback } from 'react'
 import { Link, X, ArrowDown, Clock, User, FileVideo } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,46 +7,28 @@ import { Progress } from '@/components/ui/progress'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useI18n } from '@/stores/i18n'
 import { useDownload } from '@/stores/download'
-import { useHistory } from '@/stores/history'
+import { useDownloader } from '@/stores/downloader'
 import { formatDuration } from '@/lib/utils'
-import type { VideoInfo, DownloadTask } from '@shared/types'
 
 export function Downloader() {
   const { t } = useI18n()
-  const { tasks, addTask, updateTask } = useDownload()
-  const { add: addHistory } = useHistory()
+  const { tasks, addTask } = useDownload()
 
-  const [linkText, setLinkText] = useState('')
-  const [results, setResults] = useState<Map<string, VideoInfo | null>>(new Map())
-  const [selectedFormat, setSelectedFormat] = useState<Map<string, string>>(new Map())
-  const [fetching, setFetching] = useState(false)
-  const [error, setError] = useState('')
-  const cleanupRef = useRef<(() => void) | null>(null)
+  const linkText = useDownloader((s) => s.linkText)
+  const results = useDownloader((s) => s.results)
+  const selectedFormat = useDownloader((s) => s.selectedFormat)
+  const fetching = useDownloader((s) => s.fetching)
+  const error = useDownloader((s) => s.error)
+  const setLinkText = useDownloader((s) => s.setLinkText)
+  const setResults = useDownloader((s) => s.setResults)
+  const setSelectedFormat = useDownloader((s) => s.setSelectedFormat)
+  const setFetching = useDownloader((s) => s.setFetching)
+  const setError = useDownloader((s) => s.setError)
 
   const links = linkText
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean)
-
-  useEffect(() => {
-    cleanupRef.current = window.api.onDownloadProgress((task: DownloadTask) => {
-      updateTask(task)
-      if (task.status === 'completed') {
-        addHistory({
-          id: task.id,
-          url: task.url,
-          title: task.title,
-          filePath: task.filePath,
-          fileSize: '',
-          formatId: task.formatId,
-          thumbnail: '',
-          duration: 0,
-          completedAt: Date.now()
-        })
-      }
-    })
-    return () => { cleanupRef.current?.() }
-  }, [updateTask, addHistory])
 
   const handleFetchInfo = useCallback(async () => {
     if (links.length === 0) return
@@ -117,7 +99,7 @@ export function Downloader() {
   const readyLinks = links.filter((u) => results.has(u) && results.get(u) !== null)
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-4 min-h-0">
       <div className="flex flex-col gap-2">
         <div className="relative">
           <textarea

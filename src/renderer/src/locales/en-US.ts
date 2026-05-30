@@ -32,6 +32,9 @@ const enUS: Locale = {
     openFolder: 'Open Folder',
     delete: 'Delete',
     clearAll: 'Clear All',
+    deleteSelected: 'Delete Selected ({count})',
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
     downloadedAt: 'Downloaded',
     copyLink: 'Copy Link'
   },
