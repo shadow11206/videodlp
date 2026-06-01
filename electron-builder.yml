@@ -8,9 +8,6 @@ mac:
     - dmg
     - zip
   artifactName: 'VideoDLP-${version}-mac-${arch}.${ext}'
-  hardenedRuntime: true
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
   icon: resources/icon.icns
 dmg:
   title: 'VideoDLP ${version}'
