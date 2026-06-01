@@ -33,7 +33,7 @@ export const useDownload = create<DownloadState>((set, get) => ({
 
   updateTask: (updated) => {
     set((s) => ({
-      tasks: s.tasks.map((t) => (t.id === updated.id ? updated : t))
+      tasks: s.tasks.map((t) => (t.id === updated.id ? { ...updated, batchId: t.batchId } : t))
     }))
   },
 
