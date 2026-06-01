@@ -88,8 +88,12 @@ function startDownload(task: DownloadTask): void {
     '--newline',
     '--no-playlist',
     '--no-check-certificate',
+    '-N', '8',
     '-o', outputTemplate
   ]
+  if (settings.useAria2c) {
+    args.push('--downloader', 'aria2c')
+  }
   if (task.formatId) {
     args.push('-f', task.formatId)
   }

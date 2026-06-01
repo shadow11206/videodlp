@@ -79,7 +79,10 @@ const zhCN = {
     notSet: '未设置',
     author: '作者',
     github: 'GitHub',
-    defaultQuality: '默认清晰度'
+    defaultQuality: '默认清晰度',
+    useAria2c: '使用 aria2c 加速下载',
+    aria2cInstalled: '已安装',
+    aria2cNotInstalled: '未安装 (brew install aria2)'
   },
   bottomBar: {
     ready: '就绪',

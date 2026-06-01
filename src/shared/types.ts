@@ -76,6 +76,7 @@ export interface AppSettings {
   language: 'zh-CN' | 'en-US'
   theme: 'system' | 'light' | 'dark'
   defaultQuality: string
+  useAria2c: boolean
 }
 
 export interface IpcApi {
@@ -104,4 +105,5 @@ export interface IpcApi {
   restoreFileFromTrash: (trashPath: string, originalPath: string) => Promise<boolean>
   permanentDeleteTrashFile: (trashPath: string) => Promise<void>
   checkFileExists: (filePath: string) => Promise<boolean>
+  checkAria2c: () => Promise<boolean>
 }

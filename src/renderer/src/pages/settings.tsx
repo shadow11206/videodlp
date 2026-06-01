@@ -11,10 +11,12 @@ export function Settings() {
 
   const [ytDlpStatus, setYtDlpStatus] = useState({ installed: false, version: '' })
   const [updating, setUpdating] = useState(false)
+  const [aria2cAvailable, setAria2cAvailable] = useState(false)
 
   useEffect(() => {
     settings.load()
     checkYtDlp()
+    window.api.checkAria2c().then(setAria2cAvailable)
   }, [])
 
   useEffect(() => {
@@ -147,6 +149,28 @@ export function Settings() {
                 <option key={q} value={q}>{q}</option>
               ))}
             </select>
+          </CardContent>
+        </Card>
+
+        {/* Aria2c */}
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[13px] font-medium">{t.settings.useAria2c}</span>
+              <span className="text-[12px] text-neutral-400">
+                {aria2cAvailable ? t.settings.aria2cInstalled : t.settings.aria2cNotInstalled}
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={settings.useAria2c && aria2cAvailable}
+                disabled={!aria2cAvailable}
+                onChange={(e) => settings.update({ useAria2c: e.target.checked })}
+              />
+              <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#007AFF] dark:bg-neutral-700" />
+            </label>
           </CardContent>
         </Card>
 

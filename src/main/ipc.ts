@@ -1,6 +1,7 @@
 import { ipcMain, dialog, shell, app } from 'electron'
 import { writeFileSync, existsSync, mkdirSync, renameSync } from 'fs'
 import { join, basename } from 'path'
+import { execSync } from 'child_process'
 import type { HistoryRecord, BatchGroup } from '@shared/types'
 import { getVideoInfo, isInstalled, getVersion, updateBinary } from './yt-dlp-manager'
 import { createTask, cancelTask } from './download-engine'
@@ -91,6 +92,15 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('shell:checkFileExists', async (_e, filePath: string) => {
     return existsSync(filePath)
+  })
+
+  ipcMain.handle('shell:checkAria2c', async () => {
+    try {
+      execSync('which aria2c', { stdio: 'ignore' })
+      return true
+    } catch {
+      return false
+    }
   })
 
   ipcMain.handle('history:getDeleted', async () => {

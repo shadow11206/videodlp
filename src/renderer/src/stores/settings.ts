@@ -3,10 +3,11 @@ import type { AppSettings } from '@shared/types'
 
 const defaults: AppSettings = {
   downloadPath: '',
-  maxConcurrency: 3,
+  maxConcurrency: 5,
   language: 'zh-CN',
   theme: 'system',
-  defaultQuality: ''
+  defaultQuality: '',
+  useAria2c: false
 }
 
 interface SettingsState extends AppSettings {

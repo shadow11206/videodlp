@@ -81,7 +81,10 @@ const enUS: Locale = {
     notSet: 'Not set',
     author: 'Author',
     github: 'GitHub',
-    defaultQuality: 'Default Quality'
+    defaultQuality: 'Default Quality',
+    useAria2c: 'Use aria2c for faster downloads',
+    aria2cInstalled: 'Installed',
+    aria2cNotInstalled: 'Not installed (brew install aria2)'
   },
   bottomBar: {
     ready: 'Ready',
