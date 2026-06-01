@@ -7,7 +7,8 @@ const defaults: AppSettings = {
   language: 'zh-CN',
   theme: 'system',
   defaultQuality: '',
-  useAria2c: false
+  useAria2c: false,
+  cookieBrowser: ''
 }
 
 interface SettingsState extends AppSettings {

@@ -77,6 +77,7 @@ export interface AppSettings {
   theme: 'system' | 'light' | 'dark'
   defaultQuality: string
   useAria2c: boolean
+  cookieBrowser: string
 }
 
 export interface IpcApi {

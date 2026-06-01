@@ -210,6 +210,27 @@ export function Settings() {
           </CardContent>
         </Card>
 
+        {/* Cookie Browser */}
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0 mr-4">
+              <span className="text-[13px] font-medium">{t.settings.cookieBrowser}</span>
+              <span className="text-[12px] text-neutral-400">{t.settings.cookieWarning}</span>
+            </div>
+            <select
+              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800 flex-shrink-0"
+              value={settings.cookieBrowser || ''}
+              onChange={(e) => settings.update({ cookieBrowser: e.target.value })}
+            >
+              <option value="">{t.settings.cookieDisabled}</option>
+              <option value="firefox">Firefox</option>
+              <option value="chrome">Chrome ⚠️</option>
+              <option value="safari">Safari</option>
+              <option value="edge">Edge ⚠️</option>
+            </select>
+          </CardContent>
+        </Card>
+
         {/* Author */}
         <Card>
           <CardContent className="flex items-center gap-3 py-3">

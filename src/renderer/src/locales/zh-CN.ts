@@ -27,7 +27,8 @@ const zhCN = {
     clearPage: '清空页面',
     exportParse: '导出解析结果',
     allQuality: '全部清晰度',
-    notSet: '不设置'
+    notSet: '不设置',
+    audioOnly: '仅音频'
   },
   library: {
     completed: '已完成',
@@ -82,7 +83,10 @@ const zhCN = {
     defaultQuality: '默认清晰度',
     useAria2c: '使用 aria2c 加速下载',
     aria2cInstalled: '已安装',
-    aria2cNotInstalled: '自动下载中...'
+    aria2cNotInstalled: '自动下载中...',
+    cookieBrowser: '浏览器 Cookie',
+    cookieWarning: '读取浏览器登录态以下载需登录的视频。Firefox 最可靠',
+    cookieDisabled: '不使用'
   },
   bottomBar: {
     ready: '就绪',

@@ -29,7 +29,8 @@ const enUS: Locale = {
     clearPage: 'Clear Page',
     exportParse: 'Export Parse Results',
     allQuality: 'All Quality',
-    notSet: 'Not Set'
+    notSet: 'Not Set',
+    audioOnly: 'Audio Only'
   },
   library: {
     completed: 'Completed',
@@ -84,7 +85,10 @@ const enUS: Locale = {
     defaultQuality: 'Default Quality',
     useAria2c: 'Use aria2c for faster downloads',
     aria2cInstalled: 'Installed',
-    aria2cNotInstalled: 'Auto-downloading...'
+    aria2cNotInstalled: 'Auto-downloading...',
+    cookieBrowser: 'Browser Cookies',
+    cookieWarning: 'Read browser login session for member-only content. Firefox most reliable',
+    cookieDisabled: 'Disabled'
   },
   bottomBar: {
     ready: 'Ready',

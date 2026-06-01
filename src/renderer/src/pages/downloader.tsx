@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from 'react'
-import { Link, X, ArrowDown, Clock, User, FileVideo, Trash2, ChevronLeft, ChevronRight, Download, Eraser } from 'lucide-react'
+import { Link, X, ArrowDown, Clock, User, FileVideo, Trash2, ChevronLeft, ChevronRight, Download, Eraser, Music } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,7 @@ export function Downloader() {
   const clearResults = useDownloader((s) => s.clearResults)
 
   const [globalQuality, setGlobalQuality] = useState('')
+  const [audioOnly, setAudioOnly] = useState(false)
   const cancelFetchRef = useRef(false)
 
   const PAGE_SIZE = 10
@@ -169,7 +170,7 @@ export function Downloader() {
   }, [setFetching])
 
   const handleDownload = useCallback(async (url: string) => {
-    const fmtId = selectedFormat.get(url) || ''
+    const fmtId = audioOnly ? 'bestaudio' : (selectedFormat.get(url) || '')
     const info = results.get(url)
     const taskId = await window.api.startDownload(url, fmtId)
     addTask({
@@ -177,7 +178,7 @@ export function Downloader() {
       status: 'pending', progress: 0, speed: '', eta: '',
       filePath: '', formatId: fmtId, error: '', createdAt: Date.now()
     })
-  }, [selectedFormat, results, addTask])
+  }, [selectedFormat, results, addTask, audioOnly])
 
   const handleBatchDownload = useCallback(async () => {
     for (const url of links) {
@@ -232,6 +233,15 @@ export function Downloader() {
               {t.downloader.clearPage}
             </Button>
           )}
+          <Button
+            size="sm"
+            variant={audioOnly ? 'default' : 'ghost'}
+            className="h-7 text-xs"
+            onClick={() => setAudioOnly(!audioOnly)}
+          >
+            <Music className="w-3.5 h-3.5 mr-1" />
+            {t.downloader.audioOnly}
+          </Button>
           {hasParsedResults && !fetching && (
             <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleExportParseResults}>
               <Download className="w-3.5 h-3.5 mr-1" />
@@ -240,7 +250,7 @@ export function Downloader() {
           )}
         </div>
 
-        {allQualities.length > 0 && (
+        {allQualities.length > 0 && !audioOnly && (
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-neutral-400 flex-shrink-0">{t.downloader.allQuality}:</span>
             <select
@@ -336,22 +346,22 @@ export function Downloader() {
                       {info.duration > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDuration(info.duration)}</span>}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <select
-                        className="h-7 rounded-md border border-neutral-200 bg-white/80 px-2 text-[12px] focus:outline-none focus:ring-1 focus:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
-                        value={fmtId}
-                        onChange={(e) => setSelectedFormat((prev) => { const next = new Map(prev); next.set(url, e.target.value); return next })}
-                      >
-                        {info.formats.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.resolution}{f.fps > 0 ? ` ${f.fps}fps` : ''} ({f.ext}){f.fileSize !== '未知' ? ` - ${f.fileSize}` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      {fmtId && (
-                        <Button size="sm" className="h-7 text-xs" onClick={() => handleDownload(url)}>
-                          <ArrowDown className="w-3 h-3 mr-1" />{t.downloader.download}
-                        </Button>
+                      {!audioOnly && (
+                        <select
+                          className="h-7 rounded-md border border-neutral-200 bg-white/80 px-2 text-[12px] focus:outline-none focus:ring-1 focus:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
+                          value={fmtId}
+                          onChange={(e) => setSelectedFormat((prev) => { const next = new Map(prev); next.set(url, e.target.value); return next })}
+                        >
+                          {info.formats.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.resolution}{f.fps > 0 ? ` ${f.fps}fps` : ''} ({f.ext}){f.fileSize !== '未知' ? ` - ${f.fileSize}` : ''}
+                            </option>
+                          ))}
+                        </select>
                       )}
+                      <Button size="sm" className="h-7 text-xs" onClick={() => handleDownload(url)}>
+                        <ArrowDown className="w-3 h-3 mr-1" />{t.downloader.download}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

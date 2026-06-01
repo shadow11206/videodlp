@@ -97,6 +97,9 @@ function startDownload(task: DownloadTask): void {
   if (task.formatId) {
     args.push('-f', task.formatId)
   }
+  if (settings.cookieBrowser) {
+    args.push('--cookies-from-browser', settings.cookieBrowser)
+  }
 
   const proc = spawn(ytDlpPath(), args, { stdio: ['ignore', 'pipe', 'pipe'] })
   processes.set(task.id, proc)
