@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import type { DownloadTask } from '@shared/types'
 
-const BATCH_WINDOW_MS = 5 * 60 * 1000
-
 function generateBatchId(): string {
   return `batch_${Date.now()}`
 }
@@ -10,12 +8,10 @@ function generateBatchId(): string {
 interface DownloadState {
   tasks: DownloadTask[]
   currentBatchId: string
-  lastBatchActivity: number
   addTask: (task: DownloadTask) => void
   updateTask: (task: DownloadTask) => void
   removeTask: (id: string) => void
   startNewBatch: () => string
-  getBatchId: () => string
   cancelAll: () => Promise<void>
   getActiveCount: () => number
 }
@@ -23,28 +19,15 @@ interface DownloadState {
 export const useDownload = create<DownloadState>((set, get) => ({
   tasks: [],
   currentBatchId: generateBatchId(),
-  lastBatchActivity: Date.now(),
 
   startNewBatch: () => {
     const newId = generateBatchId()
-    set({ currentBatchId: newId, lastBatchActivity: Date.now() })
+    set({ currentBatchId: newId })
     return newId
   },
 
-  getBatchId: () => {
-    const { currentBatchId, lastBatchActivity } = get()
-    const now = Date.now()
-    if (now - lastBatchActivity > BATCH_WINDOW_MS) {
-      const newId = generateBatchId()
-      set({ currentBatchId: newId, lastBatchActivity: now })
-      return newId
-    }
-    set({ lastBatchActivity: now })
-    return currentBatchId
-  },
-
   addTask: (task) => {
-    const batchId = get().getBatchId()
+    const batchId = get().currentBatchId
     set((s) => ({ tasks: [...s.tasks, { ...task, batchId }] }))
   },
 

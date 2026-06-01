@@ -129,6 +129,7 @@ export function Downloader() {
   const handleFetchInfo = useCallback(async () => {
     if (links.length === 0) return
     cancelFetchRef.current = false
+    startNewBatch()
     setFetching(true)
     setError('')
 
@@ -160,7 +161,7 @@ export function Downloader() {
       }
     }
     setFetching(false)
-  }, [links.join('\n'), globalQuality, defaultQuality])
+  }, [links.join('\n'), globalQuality, defaultQuality, startNewBatch])
 
   const handleCancelFetch = useCallback(() => {
     cancelFetchRef.current = true
@@ -179,13 +180,12 @@ export function Downloader() {
   }, [selectedFormat, results, addTask])
 
   const handleBatchDownload = useCallback(async () => {
-    startNewBatch()
     for (const url of links) {
       if (results.has(url) && results.get(url) !== null) {
         await handleDownload(url)
       }
     }
-  }, [links, results, handleDownload, startNewBatch])
+  }, [links, results, handleDownload])
 
   const handleCancel = useCallback(async (taskId: string) => {
     await window.api.cancelDownload(taskId)

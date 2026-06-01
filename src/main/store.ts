@@ -37,7 +37,7 @@ export function getHistory(): HistoryRecord[] {
 }
 
 export function addHistory(record: HistoryRecord): void {
-  const history = store.get('history')
+  const history = store.get('history').filter((r) => r.url !== record.url)
   history.unshift(record)
   store.set('history', history)
 }
