@@ -4,13 +4,16 @@ directories:
   buildResources: resources
   output: dist
 mac:
-  target: [dmg, zip]
-  artifactName: 'VideoDLP-${version}-mac.${ext}'
+  target:
+    - dmg
+    - zip
+  artifactName: 'VideoDLP-${version}-mac-${arch}.${ext}'
   hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  icon: resources/icon.icns
+dmg:
+  title: 'VideoDLP ${version}'
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!docs/*'
-  - '!electron.vite.config.*'
-  - '!{.eslint*,prettier*}'
-  - '!{tsconfig*.json}'
+  - out/**/*
+  - package.json
