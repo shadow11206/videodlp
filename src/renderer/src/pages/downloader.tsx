@@ -11,7 +11,7 @@ import { formatDuration } from '@/lib/utils'
 
 export function Downloader() {
   const { t } = useI18n()
-  const { tasks, addTask } = useDownload()
+  const { tasks, addTask, startNewBatch } = useDownload()
 
   const linkText = useDownloader((s) => s.linkText)
   const results = useDownloader((s) => s.results)
@@ -117,12 +117,13 @@ export function Downloader() {
   }, [selectedFormat, results, addTask])
 
   const handleBatchDownload = useCallback(async () => {
+    startNewBatch()
     for (const url of links) {
       if (results.has(url) && results.get(url) !== null) {
         await handleDownload(url)
       }
     }
-  }, [links, results, handleDownload])
+  }, [links, results, handleDownload, startNewBatch])
 
   const handleCancel = useCallback(async (taskId: string) => {
     await window.api.cancelDownload(taskId)

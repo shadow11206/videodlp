@@ -37,7 +37,12 @@ const zhCN = {
     selectAll: '全选',
     deselectAll: '取消全选',
     downloadedAt: '下载时间',
-    copyLink: '复制链接'
+    copyLink: '复制链接',
+    batches: '按批次',
+    search: '搜索已下载视频...',
+    noSearchResults: '未找到匹配的视频',
+    noBatches: '暂无下载批次',
+    exportCsv: '导出 CSV'
   },
   settings: {
     title: '设置',

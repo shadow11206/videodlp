@@ -51,7 +51,8 @@ export function createTask(url: string, formatId: string): string {
     filePath: '',
     formatId,
     error: '',
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    batchId: ''
   }
   tasks.set(id, task)
   pushProgress(task)

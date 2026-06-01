@@ -38,6 +38,7 @@ export interface DownloadTask {
   formatId: string
   error: string
   createdAt: number
+  batchId?: string
 }
 
 export interface HistoryRecord {
@@ -50,6 +51,18 @@ export interface HistoryRecord {
   thumbnail: string
   duration: number
   completedAt: number
+  batchId: string
+  status: string
+}
+
+export interface BatchGroup {
+  batchId: string
+  records: HistoryRecord[]
+  startTime: number
+  endTime: number
+  totalCount: number
+  successCount: number
+  failCount: number
 }
 
 export interface AppSettings {
@@ -74,4 +87,5 @@ export interface IpcApi {
   updateYtDlp: () => Promise<string>
   selectDirectory: () => Promise<string | null>
   openFileLocation: (filePath: string) => Promise<void>
+  exportBatchCsv: (batch: BatchGroup) => Promise<boolean>
 }

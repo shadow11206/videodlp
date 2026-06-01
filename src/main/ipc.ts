@@ -1,5 +1,6 @@
 import { ipcMain, dialog, shell } from 'electron'
-import type { HistoryRecord } from '@shared/types'
+import { writeFileSync } from 'fs'
+import type { HistoryRecord, BatchGroup } from '@shared/types'
 import { getVideoInfo, isInstalled, getVersion, updateBinary } from './yt-dlp-manager'
 import { createTask, cancelTask } from './download-engine'
 import { getSettings, setSettings, getHistory, addHistory, removeHistory, clearHistory } from './store'
@@ -60,5 +61,20 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('shell:openFileLocation', async (_e, filePath: string) => {
     shell.showItemInFolder(filePath)
+  })
+
+  ipcMain.handle('export:batchCsv', async (_e, batch: BatchGroup) => {
+    const result = await dialog.showSaveDialog({
+      defaultPath: `download-batch-${batch.batchId}.csv`,
+      filters: [{ name: 'CSV', extensions: ['csv'] }]
+    })
+    if (result.canceled || !result.filePath) return false
+
+    const header = '序号,链接,标题,状态\n'
+    const rows = batch.records
+      .map((r, i) => `${i + 1},"${r.url}","${r.title}","${r.status || '成功'}"`)
+      .join('\n')
+    writeFileSync(result.filePath, '﻿' + header + rows, 'utf-8')
+    return true
   })
 }

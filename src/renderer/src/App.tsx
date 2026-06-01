@@ -24,7 +24,8 @@ export default function App() {
   useEffect(() => {
     const cleanup = window.api.onDownloadProgress((task: DownloadTask) => {
       useDownload.getState().updateTask(task)
-      if (task.status === 'completed') {
+      if (task.status === 'completed' || task.status === 'failed') {
+        const storeTask = useDownload.getState().tasks.find((t) => t.id === task.id)
         useHistory.getState().add({
           id: task.id,
           url: task.url,
@@ -34,7 +35,9 @@ export default function App() {
           formatId: task.formatId,
           thumbnail: '',
           duration: 0,
-          completedAt: Date.now()
+          completedAt: Date.now(),
+          batchId: storeTask?.batchId || '',
+          status: task.status === 'failed' ? '失败' : '成功'
         })
       }
     })

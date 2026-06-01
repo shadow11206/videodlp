@@ -39,7 +39,12 @@ const enUS: Locale = {
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
     downloadedAt: 'Downloaded',
-    copyLink: 'Copy Link'
+    copyLink: 'Copy Link',
+    batches: 'Batches',
+    search: 'Search downloads...',
+    noSearchResults: 'No matching videos',
+    noBatches: 'No download batches',
+    exportCsv: 'Export CSV'
   },
   settings: {
     title: 'Settings',
