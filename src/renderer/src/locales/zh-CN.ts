@@ -82,7 +82,7 @@ const zhCN = {
     defaultQuality: '默认清晰度',
     useAria2c: '使用 aria2c 加速下载',
     aria2cInstalled: '已安装',
-    aria2cNotInstalled: '未安装 (brew install aria2)'
+    aria2cNotInstalled: '自动下载中...'
   },
   bottomBar: {
     ready: '就绪',

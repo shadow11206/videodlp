@@ -105,5 +105,6 @@ export interface IpcApi {
   restoreFileFromTrash: (trashPath: string, originalPath: string) => Promise<boolean>
   permanentDeleteTrashFile: (trashPath: string) => Promise<void>
   checkFileExists: (filePath: string) => Promise<boolean>
-  checkAria2c: () => Promise<boolean>
+  checkAria2c: () => Promise<{ installed: boolean; version: string }>
+  updateAria2c: () => Promise<void>
 }

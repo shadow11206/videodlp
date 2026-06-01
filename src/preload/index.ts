@@ -31,7 +31,8 @@ const api: IpcApi = {
   restoreFileFromTrash: (trashPath, originalPath) => ipcRenderer.invoke('file:restoreFromTrash', trashPath, originalPath),
   permanentDeleteTrashFile: (trashPath) => ipcRenderer.invoke('file:permanentDeleteTrash', trashPath),
   checkFileExists: (filePath) => ipcRenderer.invoke('shell:checkFileExists', filePath),
-  checkAria2c: () => ipcRenderer.invoke('shell:checkAria2c')
+  checkAria2c: () => ipcRenderer.invoke('shell:checkAria2c'),
+  updateAria2c: () => ipcRenderer.invoke('shell:updateAria2c')
 }
 
 contextBridge.exposeInMainWorld('api', api)
