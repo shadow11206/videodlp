@@ -28,8 +28,8 @@ export function Library() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set())
+  const [expandedDelBatches, setExpandedDelBatches] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
-  const [delCurrentPage, setDelCurrentPage] = useState(1)
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -49,10 +49,6 @@ export function Library() {
   const paginatedCompleted = filteredCompleted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
   const allOnPage = paginatedCompleted.length > 0 && paginatedCompleted.every((r) => selectedIds.has(r.id))
 
-  const delTotalPages = Math.max(1, Math.ceil(deleted.length / PAGE_SIZE))
-  const delSafePage = Math.min(delCurrentPage, delTotalPages)
-  const paginatedDeleted = deleted.slice((delSafePage - 1) * PAGE_SIZE, delSafePage * PAGE_SIZE)
-
   const batches = useMemo(() => {
     const map = new Map<string, BatchGroup>()
     for (const r of completed) {
@@ -64,6 +60,18 @@ export function Library() {
     }
     return [...map.values()].sort((a, b) => b.startTime - a.startTime)
   }, [completed])
+
+  const deletedBatches = useMemo(() => {
+    const map = new Map<string, BatchGroup>()
+    for (const r of deleted) {
+      const bid = r.batchId || 'unknown'
+      if (!map.has(bid)) map.set(bid, { batchId: bid, records: [], startTime: r.deletedAt, endTime: r.deletedAt, totalCount: 0, successCount: 0, failCount: 0 })
+      const g = map.get(bid)!
+      g.records.push(r as any); g.startTime = Math.min(g.startTime, r.deletedAt); g.endTime = Math.max(g.endTime, r.deletedAt); g.totalCount++
+      if (r.status === '失败') g.failCount++; else g.successCount++
+    }
+    return [...map.values()].sort((a, b) => b.startTime - a.startTime)
+  }, [deleted])
 
   const handleOpenFolder = (fp: string) => { if (fp) window.api.openFileLocation(fp) }
   const handleCopyLink = (url: string) => { navigator.clipboard.writeText(url) }
@@ -92,8 +100,12 @@ export function Library() {
   }, [removeBatchWithFile, t])
 
   const toggleBatchExpand = useCallback((bid: string) => setExpandedBatches((prev) => { const n = new Set(prev); n.has(bid) ? n.delete(bid) : n.add(bid); return n }), [])
+  const toggleDelBatchExpand = useCallback((bid: string) => setExpandedDelBatches((prev) => { const n = new Set(prev); n.has(bid) ? n.delete(bid) : n.add(bid); return n }), [])
   const handleExportBatch = useCallback(async (batch: BatchGroup) => { await window.api.exportBatchCsv(batch) }, [])
   const handleRestoreOne = useCallback(async (id: string) => { await restoreDeleted(id) }, [restoreDeleted])
+  const handleRestoreBatch = useCallback(async (batch: BatchGroup) => {
+    await Promise.all(batch.records.map((r) => restoreDeleted(r.id)))
+  }, [restoreDeleted])
 
   const goToPage = useCallback((p: number) => setCurrentPage(Math.max(1, Math.min(p, totalPages))), [totalPages])
   useEffect(() => { setCurrentPage(1) }, [filteredCompleted.length])
@@ -155,8 +167,8 @@ export function Library() {
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleCopyLink(r.url)}><Copy className="w-3 h-3" /></Button>
                       <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleOpenFolder(r.filePath)}><FolderOpen className="w-3.5 h-3.5 mr-1" />{t.library.openFolder}</Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={() => handleRemoveOne(r.id)} title={t.library.deleteRecord}><Trash2 className="w-3.5 h-3.5" /></Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={() => handleRemoveOneWithFile(r.id)} title={t.library.deleteRecordAndFile}><FileX className="w-3.5 h-3.5" /></Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={() => handleRemoveOne(r.id)}><Trash2 className="w-3.5 h-3.5 mr-1" />{t.library.deleteRecord}</Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs text-orange-400 hover:text-[#FF3B30]" onClick={() => handleRemoveOneWithFile(r.id)}><FileX className="w-3.5 h-3.5 mr-1" />{t.library.deleteRecordAndFile}</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -192,8 +204,8 @@ export function Library() {
                       <span className="text-[13px] font-medium">{fmtTime(batch.startTime)} ~ {fmtTime(batch.endTime)}</span>
                       <span className="text-[11px] text-neutral-400">{batch.totalCount} 条 · {batch.successCount} 成功{batch.failCount > 0 ? ` · ${batch.failCount} 失败` : ''}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-neutral-400 hover:text-[#FF3B30]" onClick={(e) => { e.stopPropagation(); handleDeleteBatchWithFile(batch) }}><FileX className="w-3.5 h-3.5" /></Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-neutral-400 hover:text-[#FF3B30]" onClick={(e) => { e.stopPropagation(); handleDeleteBatch(batch) }}><Trash2 className="w-3.5 h-3.5" /></Button>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-orange-400 hover:text-[#FF3B30]" onClick={(e) => { e.stopPropagation(); handleDeleteBatchWithFile(batch) }}><FileX className="w-3.5 h-3.5 mr-1" />{t.library.deleteRecordAndFile}</Button>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-neutral-400 hover:text-[#FF3B30]" onClick={(e) => { e.stopPropagation(); handleDeleteBatch(batch) }}><Trash2 className="w-3.5 h-3.5 mr-1" />{t.library.deleteRecord}</Button>
                     <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0" onClick={(e) => { e.stopPropagation(); handleExportBatch(batch) }}><Download className="w-3.5 h-3.5 mr-1" />{t.library.exportCsv}</Button>
                   </button>
                   {expanded && (
@@ -233,7 +245,7 @@ export function Library() {
       {tab === 'deleted' && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] text-neutral-400">{deleted.length} 条已删除记录</span>
+            <span className="text-[12px] text-neutral-400">{deleted.length} 条已删除记录 · {deletedBatches.length} 个批次</span>
             {deleted.length > 0 && (
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="sm" className="text-xs text-neutral-400 hover:text-[#007AFF]" onClick={restoreAllDeleted}><Undo2 className="w-3.5 h-3.5 mr-1" />{t.library.restoreAll}</Button>
@@ -244,34 +256,38 @@ export function Library() {
           {deleted.length === 0 ? (
             <div className="text-center py-16 text-[13px] text-neutral-300 dark:text-neutral-600">{t.library.noDeleted}</div>
           ) : (
-            <>
-              {paginatedDeleted.map((r) => (
-                <Card key={r.id} className="opacity-70">
-                  <CardContent className="flex items-center gap-3 py-3">
-                    <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-                      <span className="text-[13px] font-medium truncate">{r.title}</span>
-                      <div className="flex items-center gap-2 text-[11px] text-neutral-400">
-                        <span>{new Date(r.deletedAt || r.completedAt).toLocaleString()}</span>
-                        {r.filePath && <span className="truncate max-w-[200px]">{r.filePath.split('/').pop()}</span>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-[#007AFF] hover:text-[#007AFF]" onClick={() => handleRestoreOne(r.id)}><Undo2 className="w-3.5 h-3.5 mr-1" />{t.library.restore}</Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={() => permanentDeleteDeleted(r.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {delTotalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 pt-2">
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" disabled={delSafePage <= 1} onClick={() => setDelCurrentPage(delSafePage - 1)}><ChevronLeft className="w-3.5 h-3.5" /></Button>
-                  {Array.from({ length: delTotalPages }, (_, i) => i + 1).map((p) => (
-                    <Button key={p} variant={p === delSafePage ? 'default' : 'ghost'} size="sm" className="h-7 w-7 text-xs p-0" onClick={() => setDelCurrentPage(p)}>{p}</Button>
-                  ))}
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" disabled={delSafePage >= delTotalPages} onClick={() => setDelCurrentPage(delSafePage + 1)}><ChevronRight className="w-3.5 h-3.5" /></Button>
-                </div>
-              )}
-            </>
+            <div className="flex flex-col gap-2">
+              {deletedBatches.map((batch) => {
+                const expanded = expandedDelBatches.has(batch.batchId)
+                return (
+                  <Card key={batch.batchId} className="opacity-80">
+                    <CardContent className="py-0 px-0">
+                      <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors rounded-card" onClick={() => toggleDelBatchExpand(batch.batchId)}>
+                        {expanded ? <ChevronDown className="w-4 h-4 text-neutral-400 flex-shrink-0" /> : <ChevronRight className="w-4 h-4 text-neutral-400 flex-shrink-0" />}
+                        <div className="flex flex-col flex-1 min-w-0 gap-0.5 text-left">
+                          <span className="text-[13px] font-medium">{fmtTime(batch.startTime)} ~ {fmtTime(batch.endTime)}</span>
+                          <span className="text-[11px] text-neutral-400">{batch.totalCount} 条 · {batch.successCount} 成功{batch.failCount > 0 ? ` · ${batch.failCount} 失败` : ''}</span>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-[#007AFF] hover:text-[#007AFF]" onClick={(e) => { e.stopPropagation(); handleRestoreBatch(batch) }}><Undo2 className="w-3.5 h-3.5 mr-1" />{t.library.restore}</Button>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-neutral-400 hover:text-[#FF3B30]" onClick={(e) => { e.stopPropagation(); clearDeleted() }}><Trash2 className="w-3.5 h-3.5" /></Button>
+                      </button>
+                      {expanded && (
+                        <div className="border-t border-neutral-200/40 dark:border-neutral-800/40 px-4 py-2">
+                          {batch.records.map((r: any, i: number) => (
+                            <div key={r.id} className="flex items-center gap-3 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-0">
+                              <span className="text-[11px] text-neutral-400 w-6 flex-shrink-0">{i + 1}</span>
+                              <div className="flex flex-col flex-1 min-w-0 gap-0.5"><span className="text-[12px] truncate">{r.title}</span><span className="text-[10px] text-neutral-400 truncate">{r.url}</span></div>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs text-[#007AFF] hover:text-[#007AFF]" onClick={() => handleRestoreOne(r.id)}><Undo2 className="w-3.5 h-3.5 mr-1" />{t.library.restore}</Button>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-[#FF3B30]" onClick={() => permanentDeleteDeleted(r.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
           )}
         </div>
       )}

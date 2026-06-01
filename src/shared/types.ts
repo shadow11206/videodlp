@@ -57,6 +57,7 @@ export interface HistoryRecord {
 
 export interface DeletedRecord extends HistoryRecord {
   deletedAt: number
+  trashPath: string
 }
 
 export interface BatchGroup {
@@ -99,6 +100,8 @@ export interface IpcApi {
   restoreDeleted: (id: string) => Promise<void>
   permanentDeleteDeleted: (id: string) => Promise<void>
   clearDeleted: () => Promise<void>
-  trashFile: (filePath: string) => Promise<boolean>
+  moveFileToTrash: (filePath: string) => Promise<string>
+  restoreFileFromTrash: (trashPath: string, originalPath: string) => Promise<boolean>
+  permanentDeleteTrashFile: (trashPath: string) => Promise<void>
   checkFileExists: (filePath: string) => Promise<boolean>
 }

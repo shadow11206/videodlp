@@ -50,10 +50,8 @@ export const useHistory = create<HistoryState>((set, get) => ({
     const record = get().completed.find((r) => r.id === id)
     if (!record) return false
     const exists = record.filePath ? await window.api.checkFileExists(record.filePath) : false
-    if (record.filePath) {
-      await window.api.trashFile(record.filePath)
-    }
-    await window.api.moveToDeleted(record)
+    const trashPath = record.filePath ? await window.api.moveFileToTrash(record.filePath) : ''
+    await window.api.moveToDeleted({ ...record, trashPath } as any)
     set({ completed: get().completed.filter((r) => r.id !== id) })
     return !record.filePath || exists
   },
@@ -67,14 +65,17 @@ export const useHistory = create<HistoryState>((set, get) => ({
   removeBatchWithFile: async (ids) => {
     const records = get().completed.filter((r) => ids.includes(r.id))
     let allExist = true
+    const toDelete: HistoryRecord[] = []
     for (const r of records) {
+      let trashPath = ''
       if (r.filePath) {
         const exists = await window.api.checkFileExists(r.filePath)
         if (!exists) allExist = false
-        await window.api.trashFile(r.filePath)
+        trashPath = await window.api.moveFileToTrash(r.filePath)
       }
+      toDelete.push({ ...r, trashPath } as any)
     }
-    await Promise.all(records.map((r) => window.api.moveToDeleted(r)))
+    await Promise.all(toDelete.map((r) => window.api.moveToDeleted(r)))
     set({ completed: get().completed.filter((r) => !ids.includes(r.id)) })
     return allExist
   },
@@ -86,6 +87,10 @@ export const useHistory = create<HistoryState>((set, get) => ({
   },
 
   restoreDeleted: async (id) => {
+    const record = get().deleted.find((r) => r.id === id)
+    if (record?.trashPath) {
+      await window.api.restoreFileFromTrash(record.trashPath, record.filePath)
+    }
     await window.api.restoreDeleted(id)
     set({ deleted: get().deleted.filter((r) => r.id !== id) })
     await get().load()
@@ -93,12 +98,21 @@ export const useHistory = create<HistoryState>((set, get) => ({
 
   restoreAllDeleted: async () => {
     const records = get().deleted
-    await Promise.all(records.map((r) => window.api.restoreDeleted(r.id)))
+    for (const r of records) {
+      if (r.trashPath) {
+        await window.api.restoreFileFromTrash(r.trashPath, r.filePath)
+      }
+      await window.api.restoreDeleted(r.id)
+    }
     set({ deleted: [] })
     await get().load()
   },
 
   permanentDeleteDeleted: async (id) => {
+    const record = get().deleted.find((r) => r.id === id)
+    if (record?.trashPath) {
+      await window.api.permanentDeleteTrashFile(record.trashPath)
+    }
     await window.api.permanentDeleteDeleted(id)
     set({ deleted: get().deleted.filter((r) => r.id !== id) })
   },

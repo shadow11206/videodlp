@@ -1,9 +1,16 @@
-import { ipcMain, dialog, shell } from 'electron'
-import { writeFileSync, existsSync } from 'fs'
+import { ipcMain, dialog, shell, app } from 'electron'
+import { writeFileSync, existsSync, mkdirSync, renameSync } from 'fs'
+import { join, basename } from 'path'
 import type { HistoryRecord, BatchGroup } from '@shared/types'
 import { getVideoInfo, isInstalled, getVersion, updateBinary } from './yt-dlp-manager'
 import { createTask, cancelTask } from './download-engine'
 import { getSettings, setSettings, getHistory, addHistory, removeHistory, clearHistory, getDeleted, moveToDeleted, restoreDeleted, permanentDeleteDeleted, clearDeleted } from './store'
+
+function trashDir(): string {
+  const dir = join(app.getPath('downloads'), '.videodlp-trash')
+  mkdirSync(dir, { recursive: true })
+  return dir
+}
 
 export function registerIpcHandlers(): void {
   ipcMain.handle('video:getInfo', async (_e, url: string) => {
@@ -63,10 +70,23 @@ export function registerIpcHandlers(): void {
     shell.showItemInFolder(filePath)
   })
 
-  ipcMain.handle('shell:trashFile', async (_e, filePath: string) => {
-    if (!existsSync(filePath)) return false
-    await shell.trashItem(filePath)
+  ipcMain.handle('file:moveToTrash', async (_e, filePath: string) => {
+    if (!existsSync(filePath)) return ''
+    const trashPath = join(trashDir(), `${Date.now()}_${basename(filePath)}`)
+    renameSync(filePath, trashPath)
+    return trashPath
+  })
+
+  ipcMain.handle('file:restoreFromTrash', async (_e, trashPath: string, originalPath: string) => {
+    if (!existsSync(trashPath)) return false
+    renameSync(trashPath, originalPath)
     return true
+  })
+
+  ipcMain.handle('file:permanentDeleteTrash', async (_e, trashPath: string) => {
+    if (existsSync(trashPath)) {
+      await shell.trashItem(trashPath)
+    }
   })
 
   ipcMain.handle('shell:checkFileExists', async (_e, filePath: string) => {

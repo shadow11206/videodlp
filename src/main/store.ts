@@ -54,11 +54,11 @@ export function getDeleted(): DeletedRecord[] {
   return store.get('deleted')
 }
 
-export function moveToDeleted(record: HistoryRecord): void {
+export function moveToDeleted(record: HistoryRecord & { trashPath?: string }): void {
   const history = store.get('history').filter((r) => r.id !== record.id)
   store.set('history', history)
   const deleted = store.get('deleted')
-  deleted.unshift({ ...record, deletedAt: Date.now() })
+  deleted.unshift({ ...record, deletedAt: Date.now(), trashPath: record.trashPath || '' })
   store.set('deleted', deleted)
 }
 

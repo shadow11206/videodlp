@@ -27,7 +27,9 @@ const api: IpcApi = {
   restoreDeleted: (id) => ipcRenderer.invoke('history:restoreDeleted', id),
   permanentDeleteDeleted: (id) => ipcRenderer.invoke('history:permanentDeleteDeleted', id),
   clearDeleted: () => ipcRenderer.invoke('history:clearDeleted'),
-  trashFile: (filePath) => ipcRenderer.invoke('shell:trashFile', filePath),
+  moveFileToTrash: (filePath) => ipcRenderer.invoke('file:moveToTrash', filePath),
+  restoreFileFromTrash: (trashPath, originalPath) => ipcRenderer.invoke('file:restoreFromTrash', trashPath, originalPath),
+  permanentDeleteTrashFile: (trashPath) => ipcRenderer.invoke('file:permanentDeleteTrash', trashPath),
   checkFileExists: (filePath) => ipcRenderer.invoke('shell:checkFileExists', filePath)
 }
 
