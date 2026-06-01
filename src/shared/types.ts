@@ -55,6 +55,10 @@ export interface HistoryRecord {
   status: string
 }
 
+export interface DeletedRecord extends HistoryRecord {
+  deletedAt: number
+}
+
 export interface BatchGroup {
   batchId: string
   records: HistoryRecord[]
@@ -90,4 +94,11 @@ export interface IpcApi {
   openFileLocation: (filePath: string) => Promise<void>
   exportBatchCsv: (batch: BatchGroup) => Promise<boolean>
   saveCsv: (defaultName: string, content: string) => Promise<boolean>
+  moveToDeleted: (record: HistoryRecord) => Promise<void>
+  getDeleted: () => Promise<DeletedRecord[]>
+  restoreDeleted: (id: string) => Promise<void>
+  permanentDeleteDeleted: (id: string) => Promise<void>
+  clearDeleted: () => Promise<void>
+  trashFile: (filePath: string) => Promise<boolean>
+  checkFileExists: (filePath: string) => Promise<boolean>
 }

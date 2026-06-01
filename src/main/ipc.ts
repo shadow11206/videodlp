@@ -1,9 +1,9 @@
 import { ipcMain, dialog, shell } from 'electron'
-import { writeFileSync } from 'fs'
+import { writeFileSync, existsSync } from 'fs'
 import type { HistoryRecord, BatchGroup } from '@shared/types'
 import { getVideoInfo, isInstalled, getVersion, updateBinary } from './yt-dlp-manager'
 import { createTask, cancelTask } from './download-engine'
-import { getSettings, setSettings, getHistory, addHistory, removeHistory, clearHistory } from './store'
+import { getSettings, setSettings, getHistory, addHistory, removeHistory, clearHistory, getDeleted, moveToDeleted, restoreDeleted, permanentDeleteDeleted, clearDeleted } from './store'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle('video:getInfo', async (_e, url: string) => {
@@ -61,6 +61,36 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('shell:openFileLocation', async (_e, filePath: string) => {
     shell.showItemInFolder(filePath)
+  })
+
+  ipcMain.handle('shell:trashFile', async (_e, filePath: string) => {
+    if (!existsSync(filePath)) return false
+    await shell.trashItem(filePath)
+    return true
+  })
+
+  ipcMain.handle('shell:checkFileExists', async (_e, filePath: string) => {
+    return existsSync(filePath)
+  })
+
+  ipcMain.handle('history:getDeleted', async () => {
+    return getDeleted()
+  })
+
+  ipcMain.handle('history:moveToDeleted', async (_e, record: HistoryRecord) => {
+    moveToDeleted(record)
+  })
+
+  ipcMain.handle('history:restoreDeleted', async (_e, id: string) => {
+    restoreDeleted(id)
+  })
+
+  ipcMain.handle('history:permanentDeleteDeleted', async (_e, id: string) => {
+    permanentDeleteDeleted(id)
+  })
+
+  ipcMain.handle('history:clearDeleted', async () => {
+    clearDeleted()
   })
 
   ipcMain.handle('export:saveCsv', async (_e, defaultName: string, content: string) => {

@@ -46,7 +46,19 @@ const zhCN = {
     search: '搜索已下载视频...',
     noSearchResults: '未找到匹配的视频',
     noBatches: '暂无下载批次',
-    exportCsv: '导出 CSV'
+    exportCsv: '导出 CSV',
+    deleted: '已删除',
+    noDeleted: '暂无已删除的记录',
+    deleteRecord: '删除记录',
+    deleteRecordAndFile: '删除记录和文件',
+    deleteSelectedAndFile: '删除选中+文件 ({count})',
+    selectPage: '全选本页',
+    deselectPage: '取消本页',
+    restore: '恢复',
+    restoreAll: '恢复全部',
+    clearDeleted: '清空已删除',
+    fileNotFound: '文件不存在',
+    someFilesMissing: '部分文件已不存在，已跳过'
   },
   settings: {
     title: '设置',

@@ -48,7 +48,19 @@ const enUS: Locale = {
     search: 'Search downloads...',
     noSearchResults: 'No matching videos',
     noBatches: 'No download batches',
-    exportCsv: 'Export CSV'
+    exportCsv: 'Export CSV',
+    deleted: 'Deleted',
+    noDeleted: 'No deleted records',
+    deleteRecord: 'Delete Record',
+    deleteRecordAndFile: 'Delete Record & File',
+    deleteSelectedAndFile: 'Delete Selected+File ({count})',
+    selectPage: 'Select Page',
+    deselectPage: 'Deselect Page',
+    restore: 'Restore',
+    restoreAll: 'Restore All',
+    clearDeleted: 'Clear Deleted',
+    fileNotFound: 'File not found',
+    someFilesMissing: 'Some files no longer exist, skipped'
   },
   settings: {
     title: 'Settings',

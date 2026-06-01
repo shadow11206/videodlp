@@ -21,7 +21,14 @@ const api: IpcApi = {
   selectDirectory: () => ipcRenderer.invoke('dialog:selectDirectory'),
   openFileLocation: (fp) => ipcRenderer.invoke('shell:openFileLocation', fp),
   exportBatchCsv: (batch) => ipcRenderer.invoke('export:batchCsv', batch),
-  saveCsv: (defaultName, content) => ipcRenderer.invoke('export:saveCsv', defaultName, content)
+  saveCsv: (defaultName, content) => ipcRenderer.invoke('export:saveCsv', defaultName, content),
+  moveToDeleted: (record) => ipcRenderer.invoke('history:moveToDeleted', record),
+  getDeleted: () => ipcRenderer.invoke('history:getDeleted'),
+  restoreDeleted: (id) => ipcRenderer.invoke('history:restoreDeleted', id),
+  permanentDeleteDeleted: (id) => ipcRenderer.invoke('history:permanentDeleteDeleted', id),
+  clearDeleted: () => ipcRenderer.invoke('history:clearDeleted'),
+  trashFile: (filePath) => ipcRenderer.invoke('shell:trashFile', filePath),
+  checkFileExists: (filePath) => ipcRenderer.invoke('shell:checkFileExists', filePath)
 }
 
 contextBridge.exposeInMainWorld('api', api)
