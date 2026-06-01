@@ -70,6 +70,7 @@ export interface AppSettings {
   maxConcurrency: number
   language: 'zh-CN' | 'en-US'
   theme: 'system' | 'light' | 'dark'
+  defaultQuality: string
 }
 
 export interface IpcApi {
@@ -88,4 +89,5 @@ export interface IpcApi {
   selectDirectory: () => Promise<string | null>
   openFileLocation: (filePath: string) => Promise<void>
   exportBatchCsv: (batch: BatchGroup) => Promise<boolean>
+  saveCsv: (defaultName: string, content: string) => Promise<boolean>
 }

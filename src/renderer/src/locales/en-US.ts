@@ -25,7 +25,11 @@ const enUS: Locale = {
     fetchError: 'Failed to fetch video info',
     cancelFetch: 'Cancel Fetch',
     cancelAll: 'Cancel All',
-    noDownloading: 'No active downloads'
+    noDownloading: 'No active downloads',
+    clearPage: 'Clear Page',
+    exportParse: 'Export Parse Results',
+    allQuality: 'All Quality',
+    notSet: 'Not Set'
   },
   library: {
     completed: 'Completed',
@@ -64,7 +68,8 @@ const enUS: Locale = {
     version: 'Version',
     notSet: 'Not set',
     author: 'Author',
-    github: 'GitHub'
+    github: 'GitHub',
+    defaultQuality: 'Default Quality'
   },
   bottomBar: {
     ready: 'Ready',

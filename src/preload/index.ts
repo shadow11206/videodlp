@@ -20,7 +20,8 @@ const api: IpcApi = {
   updateYtDlp: () => ipcRenderer.invoke('ytdlp:update'),
   selectDirectory: () => ipcRenderer.invoke('dialog:selectDirectory'),
   openFileLocation: (fp) => ipcRenderer.invoke('shell:openFileLocation', fp),
-  exportBatchCsv: (batch) => ipcRenderer.invoke('export:batchCsv', batch)
+  exportBatchCsv: (batch) => ipcRenderer.invoke('export:batchCsv', batch),
+  saveCsv: (defaultName, content) => ipcRenderer.invoke('export:saveCsv', defaultName, content)
 }
 
 contextBridge.exposeInMainWorld('api', api)

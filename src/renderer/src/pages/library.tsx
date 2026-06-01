@@ -32,7 +32,9 @@ export function Library() {
   const filteredCompleted = useMemo(() => {
     if (!searchQuery.trim()) return completed
     const q = searchQuery.toLowerCase()
-    return completed.filter((r) => r.title.toLowerCase().includes(q))
+    return completed.filter((r) =>
+      r.title.toLowerCase().includes(q) || r.url.toLowerCase().includes(q)
+    )
   }, [completed, searchQuery])
 
   const batches = useMemo(() => {
@@ -102,6 +104,11 @@ export function Library() {
   const handleExportBatch = useCallback(async (batch: BatchGroup) => {
     await window.api.exportBatchCsv(batch)
   }, [])
+
+  const handleDeleteBatch = useCallback(async (batch: BatchGroup) => {
+    const ids = batch.records.map((r) => r.id)
+    await removeBatch(ids)
+  }, [removeBatch])
 
   const fmtTime = (ts: number) => {
     const d = new Date(ts)
@@ -205,6 +212,9 @@ export function Library() {
                         <span className="text-[13px] font-medium">{fmtTime(batch.startTime)} ~ {fmtTime(batch.endTime)}</span>
                         <span className="text-[11px] text-neutral-400">{batch.totalCount} 条 · {batch.successCount} 成功{batch.failCount > 0 ? ` · ${batch.failCount} 失败` : ''}</span>
                       </div>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0 text-neutral-400 hover:text-[#FF3B30]" onClick={(e) => { e.stopPropagation(); handleDeleteBatch(batch) }}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                       <Button variant="ghost" size="sm" className="h-7 text-xs flex-shrink-0" onClick={(e) => { e.stopPropagation(); handleExportBatch(batch) }}>
                         <Download className="w-3.5 h-3.5 mr-1" />{t.library.exportCsv}
                       </Button>

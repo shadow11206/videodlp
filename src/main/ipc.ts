@@ -63,6 +63,16 @@ export function registerIpcHandlers(): void {
     shell.showItemInFolder(filePath)
   })
 
+  ipcMain.handle('export:saveCsv', async (_e, defaultName: string, content: string) => {
+    const result = await dialog.showSaveDialog({
+      defaultPath: defaultName,
+      filters: [{ name: 'CSV', extensions: ['csv'] }]
+    })
+    if (result.canceled || !result.filePath) return false
+    writeFileSync(result.filePath, '﻿' + content, 'utf-8')
+    return true
+  })
+
   ipcMain.handle('export:batchCsv', async (_e, batch: BatchGroup) => {
     const result = await dialog.showSaveDialog({
       defaultPath: `download-batch-${batch.batchId}.csv`,

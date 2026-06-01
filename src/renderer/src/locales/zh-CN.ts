@@ -23,7 +23,11 @@ const zhCN = {
     fetchError: '获取视频信息失败',
     cancelFetch: '取消获取',
     cancelAll: '取消全部',
-    noDownloading: '暂无正在下载的任务'
+    noDownloading: '暂无正在下载的任务',
+    clearPage: '清空页面',
+    exportParse: '导出解析结果',
+    allQuality: '全部清晰度',
+    notSet: '不设置'
   },
   library: {
     completed: '已完成',
@@ -62,7 +66,8 @@ const zhCN = {
     version: '版本',
     notSet: '未设置',
     author: '作者',
-    github: 'GitHub'
+    github: 'GitHub',
+    defaultQuality: '默认清晰度'
   },
   bottomBar: {
     ready: '就绪',

@@ -133,6 +133,23 @@ export function Settings() {
           </CardContent>
         </Card>
 
+        {/* Default Quality */}
+        <Card>
+          <CardContent className="flex items-center justify-between py-3">
+            <span className="text-[13px] font-medium">{t.settings.defaultQuality}</span>
+            <select
+              className="h-8 rounded-mac border border-neutral-200 bg-white/80 px-2 text-[13px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#007AFF] dark:border-neutral-700 dark:bg-neutral-800"
+              value={settings.defaultQuality || ''}
+              onChange={(e) => settings.update({ defaultQuality: e.target.value })}
+            >
+              <option value="">{t.downloader.notSet}</option>
+              {['4320p', '2160p', '1440p', '1080p', '720p', '480p', '360p'].map((q) => (
+                <option key={q} value={q}>{q}</option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+
         {/* yt-dlp Status */}
         <Card>
           <CardContent className="flex items-center justify-between py-3">
