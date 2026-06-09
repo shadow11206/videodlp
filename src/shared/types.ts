@@ -39,6 +39,7 @@ export interface DownloadTask {
   error: string
   createdAt: number
   batchId?: string
+  sequenceIndex?: number
 }
 
 export interface HistoryRecord {
@@ -76,13 +77,12 @@ export interface AppSettings {
   language: 'zh-CN' | 'en-US'
   theme: 'system' | 'light' | 'dark'
   defaultQuality: string
-  useAria2c: boolean
   cookieBrowser: string
 }
 
 export interface IpcApi {
   getVideoInfo: (url: string) => Promise<VideoInfo>
-  startDownload: (url: string, formatId: string) => Promise<string>
+  startDownload: (url: string, formatId: string, sequenceIndex?: number) => Promise<string>
   cancelDownload: (taskId: string) => Promise<void>
   onDownloadProgress: (callback: (task: DownloadTask) => void) => () => void
   getSettings: () => Promise<AppSettings>
@@ -106,6 +106,4 @@ export interface IpcApi {
   restoreFileFromTrash: (trashPath: string, originalPath: string) => Promise<boolean>
   permanentDeleteTrashFile: (trashPath: string) => Promise<void>
   checkFileExists: (filePath: string) => Promise<boolean>
-  checkAria2c: () => Promise<{ installed: boolean; version: string }>
-  updateAria2c: () => Promise<void>
 }

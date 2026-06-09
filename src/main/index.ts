@@ -4,7 +4,6 @@ import { is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { setWindow } from './download-engine'
 import { isInstalled, downloadBinary } from './yt-dlp-manager'
-import { isAria2Installed, downloadAria2 } from './aria2-manager'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -50,17 +49,6 @@ app.whenReady().then(async () => {
       console.log('yt-dlp downloaded successfully')
     } catch (err) {
       console.error('Failed to download yt-dlp:', err)
-    }
-  }
-
-  const aria2Installed = await isAria2Installed()
-  if (!aria2Installed) {
-    console.log('Downloading aria2c...')
-    try {
-      await downloadAria2()
-      console.log('aria2c downloaded successfully')
-    } catch (err) {
-      console.error('Failed to download aria2c:', err)
     }
   }
 })

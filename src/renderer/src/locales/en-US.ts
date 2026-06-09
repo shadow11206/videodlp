@@ -83,9 +83,6 @@ const enUS: Locale = {
     author: 'Author',
     github: 'GitHub',
     defaultQuality: 'Default Quality',
-    useAria2c: 'Use aria2c for faster downloads',
-    aria2cInstalled: 'Installed',
-    aria2cNotInstalled: 'Auto-downloading...',
     cookieBrowser: 'Browser Cookies',
     cookieWarning: 'Read browser login session for member-only content. Firefox most reliable',
     cookieDisabled: 'Disabled'

@@ -64,13 +64,24 @@ export async function updateBinary(): Promise<string> {
   return stdout.trim()
 }
 
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+
+function isBilibili(url: string): boolean {
+  return url.includes('bilibili.com')
+}
+
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
-  const { stdout } = await execFileP(ytDlpPath(), [
+  const args = [
     '--dump-json',
     '--no-playlist',
     '--no-check-certificate',
-    url
-  ])
+    '--add-header', `User-Agent:${UA}`
+  ]
+  if (isBilibili(url)) {
+    args.push('--add-header', 'Referer:https://www.bilibili.com')
+  }
+  args.push(url)
+  const { stdout } = await execFileP(ytDlpPath(), args)
 
   const raw = JSON.parse(stdout)
 

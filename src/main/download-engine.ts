@@ -4,6 +4,12 @@ import type { DownloadTask } from '@shared/types'
 import { ytDlpPath } from './yt-dlp-manager'
 import { getSettings as getStoreSettings } from './store'
 
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+
+function isBilibili(url: string): boolean {
+  return url.includes('bilibili.com')
+}
+
 let uidCounter = 0
 const tasks = new Map<string, DownloadTask>()
 const processes = new Map<string, ChildProcess>()
@@ -38,7 +44,7 @@ function scheduleNext(): void {
   }
 }
 
-export function createTask(url: string, formatId: string): string {
+export function createTask(url: string, formatId: string, sequenceIndex?: number): string {
   const id = `task_${Date.now()}_${++uidCounter}`
   const task: DownloadTask = {
     id,
@@ -50,6 +56,7 @@ export function createTask(url: string, formatId: string): string {
     eta: '',
     filePath: '',
     formatId,
+    sequenceIndex,
     error: '',
     createdAt: Date.now(),
     batchId: ''
@@ -79,20 +86,21 @@ function startDownload(task: DownloadTask): void {
   pushProgress(task)
 
   const settings = getStoreSettings()
-  const outputTemplate = settings.downloadPath
-    ? `${settings.downloadPath}/%(title)s.%(ext)s`
-    : `%(title)s.%(ext)s`
+  const prefix = task.sequenceIndex != null ? `${String(task.sequenceIndex + 1).padStart(2, '0')}_` : ''
+  const basePath = settings.downloadPath || '.'
+  const outputTemplate = `${basePath}/${prefix}%(title)s.%(ext)s`
 
   const args = [
     task.url,
     '--newline',
     '--no-playlist',
     '--no-check-certificate',
+    '--add-header', `User-Agent:${UA}`,
     '-N', '8',
     '-o', outputTemplate
   ]
-  if (settings.useAria2c) {
-    args.push('--downloader', 'aria2c')
+  if (isBilibili(task.url)) {
+    args.push('--add-header', 'Referer:https://www.bilibili.com')
   }
   if (task.formatId) {
     args.push('-f', task.formatId)

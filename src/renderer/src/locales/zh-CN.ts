@@ -81,9 +81,6 @@ const zhCN = {
     author: '作者',
     github: 'GitHub',
     defaultQuality: '默认清晰度',
-    useAria2c: '使用 aria2c 加速下载',
-    aria2cInstalled: '已安装',
-    aria2cNotInstalled: '自动下载中...',
     cookieBrowser: '浏览器 Cookie',
     cookieWarning: '读取浏览器登录态以下载需登录的视频。Firefox 最可靠',
     cookieDisabled: '不使用'

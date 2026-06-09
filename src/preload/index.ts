@@ -3,7 +3,7 @@ import type { IpcApi, DownloadTask } from '@shared/types'
 
 const api: IpcApi = {
   getVideoInfo: (url) => ipcRenderer.invoke('video:getInfo', url),
-  startDownload: (url, formatId) => ipcRenderer.invoke('download:start', url, formatId),
+  startDownload: (url, formatId, sequenceIndex) => ipcRenderer.invoke('download:start', url, formatId, sequenceIndex),
   cancelDownload: (taskId) => ipcRenderer.invoke('download:cancel', taskId),
   onDownloadProgress: (callback) => {
     const handler = (_e: Electron.IpcRendererEvent, task: DownloadTask) => callback(task)
@@ -31,8 +31,6 @@ const api: IpcApi = {
   restoreFileFromTrash: (trashPath, originalPath) => ipcRenderer.invoke('file:restoreFromTrash', trashPath, originalPath),
   permanentDeleteTrashFile: (trashPath) => ipcRenderer.invoke('file:permanentDeleteTrash', trashPath),
   checkFileExists: (filePath) => ipcRenderer.invoke('shell:checkFileExists', filePath),
-  checkAria2c: () => ipcRenderer.invoke('shell:checkAria2c'),
-  updateAria2c: () => ipcRenderer.invoke('shell:updateAria2c')
 }
 
 contextBridge.exposeInMainWorld('api', api)

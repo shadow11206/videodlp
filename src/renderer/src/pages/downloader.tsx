@@ -169,10 +169,10 @@ export function Downloader() {
     setFetching(false)
   }, [setFetching])
 
-  const handleDownload = useCallback(async (url: string) => {
+  const handleDownload = useCallback(async (url: string, index?: number) => {
     const fmtId = audioOnly ? 'bestaudio' : (selectedFormat.get(url) || '')
     const info = results.get(url)
-    const taskId = await window.api.startDownload(url, fmtId)
+    const taskId = await window.api.startDownload(url, fmtId, index)
     addTask({
       id: taskId, url, title: info?.title || url,
       status: 'pending', progress: 0, speed: '', eta: '',
@@ -181,9 +181,9 @@ export function Downloader() {
   }, [selectedFormat, results, addTask, audioOnly])
 
   const handleBatchDownload = useCallback(async () => {
-    for (const url of links) {
+    for (const [i, url] of links.entries()) {
       if (results.has(url) && results.get(url) !== null) {
-        await handleDownload(url)
+        await handleDownload(url, i)
       }
     }
   }, [links, results, handleDownload])
@@ -307,7 +307,7 @@ export function Downloader() {
                         <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleCancel(taskForUrl.id)}><X className="w-3 h-3" /></Button>
                       )}
                       {taskForUrl.status === 'failed' && (
-                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(url)}>{t.downloader.retry}</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(url, links.indexOf(url))}>{t.downloader.retry}</Button>
                       )}
                     </div>
                   </div>
@@ -359,7 +359,7 @@ export function Downloader() {
                           ))}
                         </select>
                       )}
-                      <Button size="sm" className="h-7 text-xs" onClick={() => handleDownload(url)}>
+                      <Button size="sm" className="h-7 text-xs" onClick={() => handleDownload(url, links.indexOf(url))}>
                         <ArrowDown className="w-3 h-3 mr-1" />{t.downloader.download}
                       </Button>
                     </div>

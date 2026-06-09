@@ -3,7 +3,6 @@ import { writeFileSync, existsSync, mkdirSync, renameSync } from 'fs'
 import { join, basename } from 'path'
 import type { HistoryRecord, BatchGroup } from '@shared/types'
 import { getVideoInfo, isInstalled, getVersion, updateBinary } from './yt-dlp-manager'
-import { isAria2Installed, getAria2Version, downloadAria2 } from './aria2-manager'
 import { createTask, cancelTask } from './download-engine'
 import { getSettings, setSettings, getHistory, addHistory, removeHistory, clearHistory, getDeleted, moveToDeleted, restoreDeleted, permanentDeleteDeleted, clearDeleted } from './store'
 
@@ -18,8 +17,8 @@ export function registerIpcHandlers(): void {
     return getVideoInfo(url)
   })
 
-  ipcMain.handle('download:start', async (_e, url: string, formatId: string) => {
-    return createTask(url, formatId)
+  ipcMain.handle('download:start', async (_e, url: string, formatId: string, sequenceIndex?: number) => {
+    return createTask(url, formatId, sequenceIndex)
   })
 
   ipcMain.handle('download:cancel', async (_e, taskId: string) => {
@@ -92,16 +91,6 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('shell:checkFileExists', async (_e, filePath: string) => {
     return existsSync(filePath)
-  })
-
-  ipcMain.handle('shell:checkAria2c', async () => {
-    const installed = await isAria2Installed()
-    const version = installed ? await getAria2Version() : ''
-    return { installed, version }
-  })
-
-  ipcMain.handle('shell:updateAria2c', async () => {
-    await downloadAria2()
   })
 
   ipcMain.handle('history:getDeleted', async () => {
