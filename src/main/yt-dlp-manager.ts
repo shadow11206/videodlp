@@ -70,6 +70,19 @@ function isBilibili(url: string): boolean {
   return url.includes('bilibili.com')
 }
 
+function codecPriority(vcodec: string): number {
+  const vc = vcodec.toLowerCase()
+  if (vc.includes('avc') || vc.includes('h264') || vc.includes('avc1')) return 3
+  if (vc.includes('hevc') || vc.includes('h265') || vc.includes('hev1') || vc.includes('hvc1')) return 2
+  if (vc.includes('vp9') || vc.includes('vp09') || vc.includes('av01') || vc.includes('av1')) return -1
+  return 0
+}
+
+function isCompatibleCodec(vcodec: string | null | undefined): boolean {
+  if (!vcodec) return false
+  return codecPriority(vcodec) >= 2
+}
+
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
   const args = [
     '--dump-json',
@@ -85,10 +98,30 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
 
   const raw = JSON.parse(stdout)
 
+  const rawFormats: any[] = raw.formats || []
+
+  const compatible: any[] = []
+  const fallback: any[] = []
+  for (const f of rawFormats) {
+    if (f.vcodec === 'none') continue
+    if (isCompatibleCodec(f.vcodec) && f.ext === 'mp4') {
+      compatible.push(f)
+    } else {
+      fallback.push(f)
+    }
+  }
+
+  const sortByRes = (a: any, b: any) => {
+    const na = parseInt(a.resolution) || 0
+    const nb = parseInt(b.resolution) || 0
+    return nb - na
+  }
+  compatible.sort(sortByRes)
+  fallback.sort(sortByRes)
+
   const formats: VideoFormat[] = []
   const seen = new Set<string>()
-  for (const f of raw.formats || []) {
-    if (f.vcodec === 'none') continue
+  for (const f of [...compatible, ...fallback]) {
     const resolution = f.resolution || f.format_note || 'unknown'
     if (seen.has(resolution)) continue
     seen.add(resolution)

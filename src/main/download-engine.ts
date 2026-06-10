@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'child_process'
 import type { BrowserWindow } from 'electron'
 import type { DownloadTask } from '@shared/types'
 import { ytDlpPath } from './yt-dlp-manager'
+import { getFfmpegLocation } from './ffmpeg-manager'
 import { getSettings as getStoreSettings } from './store'
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
@@ -80,7 +81,7 @@ export function cancelTask(taskId: string): void {
   }
 }
 
-function startDownload(task: DownloadTask): void {
+async function startDownload(task: DownloadTask): Promise<void> {
   task.status = 'downloading'
   task.progress = 0
   pushProgress(task)
@@ -97,13 +98,25 @@ function startDownload(task: DownloadTask): void {
     '--no-check-certificate',
     '--add-header', `User-Agent:${UA}`,
     '-N', '8',
-    '-o', outputTemplate
+    '-S', 'ext:mp4:m4a',
+    '-o', outputTemplate,
+    '--merge-output-format', 'mp4'
   ]
   if (isBilibili(task.url)) {
     args.push('--add-header', 'Referer:https://www.bilibili.com')
   }
+
+  const ffmpegLoc = await getFfmpegLocation()
+  if (ffmpegLoc && ffmpegLoc !== 'ffmpeg') {
+    args.push('--ffmpeg-location', ffmpegLoc)
+  }
+
   if (task.formatId) {
-    args.push('-f', task.formatId)
+    if (ffmpegLoc) {
+      args.push('-f', `${task.formatId}+bestaudio/best`)
+    } else {
+      args.push('-f', task.formatId)
+    }
   }
   if (settings.cookieBrowser) {
     args.push('--cookies-from-browser', settings.cookieBrowser)

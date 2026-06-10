@@ -4,6 +4,7 @@ import { is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { setWindow } from './download-engine'
 import { isInstalled, downloadBinary } from './yt-dlp-manager'
+import { isFfmpegInstalled } from './ffmpeg-manager'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -50,6 +51,13 @@ app.whenReady().then(async () => {
     } catch (err) {
       console.error('Failed to download yt-dlp:', err)
     }
+  }
+
+  const ffmpegOk = await isFfmpegInstalled()
+  if (!ffmpegOk) {
+    console.log('ffmpeg not found — install via: brew install ffmpeg')
+  } else {
+    console.log('ffmpeg detected')
   }
 })
 
