@@ -5,7 +5,7 @@ import { ytDlpPath } from './yt-dlp-manager'
 import { getFfmpegLocation } from './ffmpeg-manager'
 import { getSettings as getStoreSettings } from './store'
 
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
 
 function isBilibili(url: string): boolean {
   return url.includes('bilibili.com')
