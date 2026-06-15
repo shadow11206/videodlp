@@ -55,7 +55,7 @@ npm run dist:zip
 | 前端 | React 18 + TypeScript |
 | 样式 | Tailwind CSS 3 |
 | 状态管理 | Zustand |
-| 下载引擎 | yt-dlp + aria2c（可选） |
+| 下载引擎 | yt-dlp + ffmpeg（可选） |
 | 持久化 | electron-store |
 | 打包 | electron-builder |
 
@@ -66,7 +66,7 @@ src/
 ├── main/            # Electron 主进程
 │   ├── download-engine.ts   # 下载队列与生命周期
 │   ├── yt-dlp-manager.ts    # yt-dlp 二进制管理
-│   ├── aria2-manager.ts     # aria2c 二进制管理
+│   ├── ffmpeg-manager.ts     # ffmpeg 二进制管理
 │   ├── ipc.ts               # IPC 处理器
 │   └── store.ts             # 持久化存储
 ├── preload/         # 预加载脚本（contextBridge）
